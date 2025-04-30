@@ -2,7 +2,9 @@ package com.skillverse.controller;
 
 import com.skillverse.model.LearningPlan;
 import com.skillverse.service.LearningPlanService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -30,18 +32,26 @@ public class LearningPlanController {
 
     @GetMapping("/shared/{username}")
     public List<LearningPlan> getPlansSharedWith(@PathVariable String username) {
-    return service.getPlansSharedWith(username);
+        return service.getPlansSharedWith(username);
     }
 
-
     @PostMapping
-    public ResponseEntity<LearningPlan> createPlan(@RequestBody LearningPlan plan) {
+    public ResponseEntity<LearningPlan> createPlan(@Valid @RequestBody LearningPlan plan) {
         return ResponseEntity.status(201).body(service.createPlan(plan));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<LearningPlan> updatePlan(@PathVariable String id, @RequestBody LearningPlan plan) {
+    public ResponseEntity<LearningPlan> updatePlan(@PathVariable String id, @Valid @RequestBody LearningPlan plan) {
         return ResponseEntity.ok(service.updatePlan(id, plan));
+    }
+
+    //Error handler for validation failures
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<String> handleValidationErrors(MethodArgumentNotValidException ex) {
+        String errorMsg = ex.getBindingResult().getFieldErrors().stream()
+                .map(err -> err.getField() + ": " + err.getDefaultMessage())
+                .reduce("", (a, b) -> a + b + "\n");
+        return ResponseEntity.badRequest().body(errorMsg.trim());
     }
 
     @DeleteMapping("/{id}")

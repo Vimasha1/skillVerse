@@ -7,6 +7,12 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.ArrayList;
 
+import jakarta.validation.constraints.Future;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.NotNull;
+import java.time.LocalDate;
+
 
 @Document(collection = "learning_plans") // collection name in MongoDB
 public class LearningPlan {
@@ -14,11 +20,24 @@ public class LearningPlan {
     @Id
     private String id;
 
+    @NotBlank(message = "Title is required")
+    @Size(min = 3, max = 100, message = "Title must be between 3 and 100 characters")
     private String title;
+
+    @NotBlank(message = "Topics must not be empty")
     private String topics;
+
+    @NotBlank(message = "Resources must not be empty")
     private String resources;
+
+    @NotNull(message = "Deadline is required")
+    @Future(message = "Deadline must be a future date")
     private LocalDate deadline;
+
+
+    @NotBlank(message = "CreatedBy is required")
     private String createdBy;
+
     private List<String> sharedWith = new ArrayList<>();
 
 
