@@ -28,6 +28,12 @@ public class LearningPlanController {
         return plan != null ? ResponseEntity.ok(plan) : ResponseEntity.notFound().build();
     }
 
+    @GetMapping("/shared/{username}")
+    public List<LearningPlan> getPlansSharedWith(@PathVariable String username) {
+    return service.getPlansSharedWith(username);
+    }
+
+
     @PostMapping
     public ResponseEntity<LearningPlan> createPlan(@RequestBody LearningPlan plan) {
         return ResponseEntity.status(201).body(service.createPlan(plan));

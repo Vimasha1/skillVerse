@@ -39,4 +39,9 @@ public class LearningPlanService {
     public void deletePlan(String id) {
         repo.deleteById(id);
     }
+
+    public List<LearningPlan> getPlansSharedWith(String username) {
+        return repo.findBySharedWithContaining(username);
+    }
+    
 }
