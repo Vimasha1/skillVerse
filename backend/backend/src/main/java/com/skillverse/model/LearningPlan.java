@@ -4,6 +4,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -11,6 +12,10 @@ import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import jakarta.validation.constraints.NotNull;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.format.annotation.DateTimeFormat;
+
 import java.time.LocalDate;
 
 
@@ -40,6 +45,14 @@ public class LearningPlan {
 
     private List<String> sharedWith = new ArrayList<>();
 
+    @CreatedDate
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+    private LocalDateTime createdAt;
+
+    @LastModifiedDate
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+    private LocalDateTime updatedAt;
+
 
     // Getters and Setters
     public String getId() { return id; }
@@ -63,8 +76,19 @@ public class LearningPlan {
     public List<String> getSharedWith() {
         return sharedWith;
     }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+
     public void setSharedWith(List<String> sharedWith) {
         this.sharedWith = sharedWith;
     }
+
+    public long getDaysLeft() {
+        if (deadline == null) return -1;
+        return java.time.temporal.ChronoUnit.DAYS.between(LocalDate.now(), deadline);
+    }
+    
+    
     
 }
