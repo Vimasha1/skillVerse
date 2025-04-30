@@ -1,7 +1,7 @@
 package com.skillverse.repository;
 
 import com.skillverse.model.LearningPlan;
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.mongodb.repository.MongoRepository;
 
-public interface LearningPlanRepository extends JpaRepository<LearningPlan, Long> {
+public interface LearningPlanRepository extends MongoRepository<LearningPlan, String> {
 }

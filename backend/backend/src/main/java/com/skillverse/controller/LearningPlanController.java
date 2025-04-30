@@ -23,7 +23,7 @@ public class LearningPlanController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<LearningPlan> getPlanById(@PathVariable Long id) {
+    public ResponseEntity<LearningPlan> getPlanById(@PathVariable String id) {
         LearningPlan plan = service.getPlanById(id);
         return plan != null ? ResponseEntity.ok(plan) : ResponseEntity.notFound().build();
     }
@@ -34,12 +34,12 @@ public class LearningPlanController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<LearningPlan> updatePlan(@PathVariable Long id, @RequestBody LearningPlan plan) {
+    public ResponseEntity<LearningPlan> updatePlan(@PathVariable String id, @RequestBody LearningPlan plan) {
         return ResponseEntity.ok(service.updatePlan(id, plan));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletePlan(@PathVariable Long id) {
+    public ResponseEntity<Void> deletePlan(@PathVariable String id) {
         service.deletePlan(id);
         return ResponseEntity.noContent().build();
     }

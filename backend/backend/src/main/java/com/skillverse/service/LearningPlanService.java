@@ -19,7 +19,7 @@ public class LearningPlanService {
         return repo.findAll();
     }
 
-    public LearningPlan getPlanById(Long id) {
+    public LearningPlan getPlanById(String id) {
         return repo.findById(id).orElse(null);
     }
 
@@ -27,7 +27,7 @@ public class LearningPlanService {
         return repo.save(plan);
     }
 
-    public LearningPlan updatePlan(Long id, LearningPlan updatedPlan) {
+    public LearningPlan updatePlan(String id, LearningPlan updatedPlan) {
         LearningPlan existing = repo.findById(id).orElseThrow();
         existing.setTitle(updatedPlan.getTitle());
         existing.setTopics(updatedPlan.getTopics());
@@ -36,7 +36,7 @@ public class LearningPlanService {
         return repo.save(existing);
     }
 
-    public void deletePlan(Long id) {
+    public void deletePlan(String id) {
         repo.deleteById(id);
     }
 }

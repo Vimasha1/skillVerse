@@ -1,30 +1,25 @@
 package com.skillverse.model;
 
-import jakarta.persistence.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
 import java.time.LocalDate;
 
-@Entity
+@Document(collection = "learning_plans") // collection name in MongoDB
 public class LearningPlan {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
     private String title;
-
-    @Column(length = 1000)
     private String topics;
-
-    @Column(length = 1000)
     private String resources;
-
     private LocalDate deadline;
-
     private String createdBy;
 
-    // Getters & Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    // Getters and Setters
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
 
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
