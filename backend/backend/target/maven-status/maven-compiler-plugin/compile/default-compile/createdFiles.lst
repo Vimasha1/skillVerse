@@ -1,0 +1,5 @@
+com\skillverse\BackendApplication.class
+com\skillverse\repository\PostRepository.class
+com\skillverse\controller\PostController.class
+com\skillverse\model\Post.class
+com\skillverse\service\PostService.class
