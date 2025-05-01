@@ -1,7 +1,7 @@
-package com.skillverse.backend.service;
+package com.skillverse.service;
 
-import com.skillverse.backend.model.ProgressTemplate;
-import com.skillverse.backend.repository.ProgressTemplateRepository;
+import com.skillverse.model.ProgressTemplate;
+import com.skillverse.repository.ProgressTemplateRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;

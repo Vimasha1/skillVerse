@@ -1,7 +1,7 @@
-package com.skillverse.backend.controller;
+package com.skillverse.controller;
 
-import com.skillverse.backend.model.ProgressUpdate;
-import com.skillverse.backend.service.ProgressUpdateService;
+import com.skillverse.model.ProgressUpdate;
+import com.skillverse.service.ProgressUpdateService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

@@ -1,4 +1,4 @@
-package com.skillverse.backend.model;
+package com.skillverse.model;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;

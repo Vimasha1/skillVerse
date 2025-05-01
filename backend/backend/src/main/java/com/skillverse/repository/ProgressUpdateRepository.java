@@ -1,6 +1,6 @@
-package com.skillverse.backend.repository;
+package com.skillverse.repository;
 
-import com.skillverse.backend.model.ProgressUpdate;
+import com.skillverse.model.ProgressUpdate;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import java.util.List;
 

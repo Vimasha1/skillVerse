@@ -1,6 +1,6 @@
-package com.skillverse.backend.repository;
+package com.skillverse.repository;
 
-import com.skillverse.backend.model.ProgressTemplate;
+import com.skillverse.model.ProgressTemplate;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
 public interface ProgressTemplateRepository extends MongoRepository<ProgressTemplate, String> {

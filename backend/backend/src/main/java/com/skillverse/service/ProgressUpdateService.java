@@ -1,7 +1,7 @@
-package com.skillverse.backend.service;
+package com.skillverse.service;
 
-import com.skillverse.backend.model.ProgressUpdate;
-import com.skillverse.backend.repository.ProgressUpdateRepository;
+import com.skillverse.model.ProgressUpdate;
+import com.skillverse.repository.ProgressUpdateRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
