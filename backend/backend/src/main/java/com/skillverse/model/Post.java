@@ -11,27 +11,33 @@ public class Post {
 
     @Id
     private String id;
-    
-    private String userId;  // ID of the user who created the post
+
+    private String userId;
     private String description;
-    private List<String> mediaUrls;  // up to 3 media links (photos/videos)
+    private String skillName;
+    private List<String> mediaUrls;
+    private List<String> likes;        // List of userIds who liked
+    private List<Comment> comments;    // List of comments on the post
     private Date createdAt;
     private Date updatedAt;
 
     public Post() {
     }
 
-    public Post(String userId, String description, List<String> mediaUrls, Date createdAt, Date updatedAt) {
+    public Post(String userId, String description, String skillName, List<String> mediaUrls,
+                List<String> likes, List<Comment> comments, Date createdAt, Date updatedAt) {
         this.userId = userId;
         this.description = description;
+        this.skillName = skillName;
         this.mediaUrls = mediaUrls;
+        this.likes = likes;
+        this.comments = comments;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
 
     // Getters and Setters
-    // (You can use Lombok later to generate these automatically)
-    
+
     public String getId() {
         return id;
     }
@@ -56,12 +62,36 @@ public class Post {
         this.description = description;
     }
 
+    public String getSkillName() {
+        return skillName;
+    }
+
+    public void setSkillName(String skillName) {
+        this.skillName = skillName;
+    }
+
     public List<String> getMediaUrls() {
         return mediaUrls;
     }
 
     public void setMediaUrls(List<String> mediaUrls) {
         this.mediaUrls = mediaUrls;
+    }
+
+    public List<String> getLikes() {
+        return likes;
+    }
+
+    public void setLikes(List<String> likes) {
+        this.likes = likes;
+    }
+
+    public List<Comment> getComments() {
+        return comments;
+    }
+
+    public void setComments(List<Comment> comments) {
+        this.comments = comments;
     }
 
     public Date getCreatedAt() {
