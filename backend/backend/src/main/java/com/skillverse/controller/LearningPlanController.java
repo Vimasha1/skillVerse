@@ -37,9 +37,8 @@ public class LearningPlanController {
 
     @GetMapping("/plans/skillType/{type}")
     public List<LearningPlan> getPlansBySkillType(@PathVariable String type) {
-    return service.getPlansBySkillType(type);
-}
-
+        return service.getPlansBySkillType(type);
+    }
 
     @PostMapping
     public ResponseEntity<LearningPlan> createPlan(@Valid @RequestBody LearningPlan plan) {
@@ -51,18 +50,18 @@ public class LearningPlanController {
         return ResponseEntity.ok(service.updatePlan(id, plan));
     }
 
-    //Error handler for validation failures
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletePlan(@PathVariable String id) {
+        service.deletePlan(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    // Error handler for validation failures
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<String> handleValidationErrors(MethodArgumentNotValidException ex) {
         String errorMsg = ex.getBindingResult().getFieldErrors().stream()
                 .map(err -> err.getField() + ": " + err.getDefaultMessage())
                 .reduce("", (a, b) -> a + b + "\n");
         return ResponseEntity.badRequest().body(errorMsg.trim());
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletePlan(@PathVariable String id) {
-        service.deletePlan(id);
-        return ResponseEntity.noContent().build();
     }
 }

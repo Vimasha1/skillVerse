@@ -29,11 +29,25 @@ public class LearningPlanService {
 
     public LearningPlan updatePlan(String id, LearningPlan updatedPlan) {
         LearningPlan existing = repo.findById(id).orElseThrow();
+
         existing.setTitle(updatedPlan.getTitle());
         existing.setTopics(updatedPlan.getTopics());
         existing.setResources(updatedPlan.getResources());
         existing.setDeadline(updatedPlan.getDeadline());
         existing.setSkillType(updatedPlan.getSkillType());
+        existing.setSharedWith(updatedPlan.getSharedWith());
+
+        existing.setMilestones(updatedPlan.getMilestones());
+        existing.setProgress(updatedPlan.getProgress());
+        existing.setReminders(updatedPlan.getReminders());
+        existing.setCollaborators(updatedPlan.getCollaborators());
+        existing.setVisibility(updatedPlan.getVisibility());
+        existing.setLikes(updatedPlan.getLikes());
+        existing.setTags(updatedPlan.getTags());
+        existing.setCompletionDate(updatedPlan.getCompletionDate());
+        existing.setLastReviewedAt(updatedPlan.getLastReviewedAt());
+        existing.setRankedPriority(updatedPlan.getRankedPriority());
+        existing.setFeedback(updatedPlan.getFeedback());
 
         return repo.save(existing);
     }
@@ -49,6 +63,4 @@ public class LearningPlanService {
     public List<LearningPlan> getPlansBySkillType(String type) {
         return repo.findBySkillType(type);
     }
-    
-    
 }
