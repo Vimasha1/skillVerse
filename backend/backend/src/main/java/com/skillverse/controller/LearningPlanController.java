@@ -35,6 +35,12 @@ public class LearningPlanController {
         return service.getPlansSharedWith(username);
     }
 
+    @GetMapping("/plans/skillType/{type}")
+    public List<LearningPlan> getPlansBySkillType(@PathVariable String type) {
+    return service.getPlansBySkillType(type);
+}
+
+
     @PostMapping
     public ResponseEntity<LearningPlan> createPlan(@Valid @RequestBody LearningPlan plan) {
         return ResponseEntity.status(201).body(service.createPlan(plan));

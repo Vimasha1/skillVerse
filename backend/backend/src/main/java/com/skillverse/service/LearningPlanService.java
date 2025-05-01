@@ -33,6 +33,8 @@ public class LearningPlanService {
         existing.setTopics(updatedPlan.getTopics());
         existing.setResources(updatedPlan.getResources());
         existing.setDeadline(updatedPlan.getDeadline());
+        existing.setSkillType(updatedPlan.getSkillType());
+
         return repo.save(existing);
     }
 
@@ -43,5 +45,10 @@ public class LearningPlanService {
     public List<LearningPlan> getPlansSharedWith(String username) {
         return repo.findBySharedWithContaining(username);
     }
+
+    public List<LearningPlan> getPlansBySkillType(String type) {
+        return repo.findBySkillType(type);
+    }
+    
     
 }

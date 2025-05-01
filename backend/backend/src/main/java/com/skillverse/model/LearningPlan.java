@@ -32,6 +32,9 @@ public class LearningPlan {
     @NotBlank(message = "Topics must not be empty")
     private String topics;
 
+    @NotBlank(message = "Skill type is required")
+    private String skillType;
+
     @NotBlank(message = "Resources must not be empty")
     private String resources;
 
@@ -72,7 +75,9 @@ public class LearningPlan {
 
     public String getCreatedBy() { return createdBy; }
     public void setCreatedBy(String createdBy) { this.createdBy = createdBy; }
-
+    
+    public String getSkillType() { return skillType; }
+    public void setSkillType(String skillType) { this.skillType = skillType; }
     public List<String> getSharedWith() {
         return sharedWith;
     }
