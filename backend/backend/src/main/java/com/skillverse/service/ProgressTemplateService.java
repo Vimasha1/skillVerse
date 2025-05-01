@@ -4,9 +4,7 @@ import com.skillverse.backend.model.ProgressTemplate;
 import com.skillverse.backend.repository.ProgressTemplateRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class ProgressTemplateService {
@@ -19,6 +17,11 @@ public class ProgressTemplateService {
         return progressTemplateRepository.findAll();
     }
 
+    // Get a template by ID
+    public ProgressTemplate getTemplateById(String id) {
+        return progressTemplateRepository.findById(id).orElse(null);  // Return null if not found
+    }
+
     // Add a new template
     public ProgressTemplate addTemplate(String templateText) {
         ProgressTemplate newTemplate = new ProgressTemplate(templateText);
@@ -27,22 +30,18 @@ public class ProgressTemplateService {
 
     // Update an existing template
     public ProgressTemplate updateTemplate(String id, String templateText) {
-        Optional<ProgressTemplate> existingTemplate = progressTemplateRepository.findById(id);
-        if (existingTemplate.isPresent()) {
-            ProgressTemplate template = existingTemplate.get();
-            template.setTemplateText(templateText);  // Update the template text
-            return progressTemplateRepository.save(template);
-        }
-        return null;  // Return null if template not found
+        ProgressTemplate existingTemplate = progressTemplateRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Template not found"));
+        existingTemplate.setTemplateText(templateText);
+        return progressTemplateRepository.save(existingTemplate);
     }
 
     // Delete a template
     public boolean deleteTemplate(String id) {
-        Optional<ProgressTemplate> template = progressTemplateRepository.findById(id);
-        if (template.isPresent()) {
+        if (progressTemplateRepository.existsById(id)) {
             progressTemplateRepository.deleteById(id);
-            return true;
+            return true;  // Return true if deletion is successful
         }
-        return false;  // Return false if template not found
+        return false;  // Return false if template is not found
     }
 }
