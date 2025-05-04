@@ -12,7 +12,7 @@ const Navbar = () => {
 
       <div className="flex items-center space-x-4">
         <Link to="/login" className="hover:text-blue-300">Login</Link>
-        <Link to="/register" className="hover:text-blue-300">Register</Link>
+        <Link to="/user-profiles/register" className="hover:text-blue-300">Register</Link>
         <img
           src="https://via.placeholder.com/30"
           alt="Profile"
