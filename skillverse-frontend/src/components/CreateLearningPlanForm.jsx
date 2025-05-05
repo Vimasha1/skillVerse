@@ -11,6 +11,7 @@ export default function CreateLearningPlanForm({ editMode = false }) {
   const [form, setForm]       = useState({
     title: '',
     topics: '',
+    skillType: '',
     resources: '',
     deadline: '',
     milestones: [emptyMilestone()],
@@ -26,6 +27,7 @@ export default function CreateLearningPlanForm({ editMode = false }) {
       getPlanById(id)
         .then(res => setForm({
           ...res.data,
+          skillType: res.data.skillType || '',
           milestones: res.data.milestones.length 
             ? res.data.milestones 
             : [emptyMilestone()],
@@ -66,7 +68,7 @@ export default function CreateLearningPlanForm({ editMode = false }) {
       else                await createPlan(form);
       navigate('/plans');
     } catch (e) {
-      setError(e.response?.data?.message || e.message);
+      setError(e.response?.data || e.message);
     } finally {
       setLoading(false);
     }
@@ -102,6 +104,20 @@ export default function CreateLearningPlanForm({ editMode = false }) {
           name="topics"
           value={form.topics}
           onChange={handleChange}
+          className="w-full border rounded px-2 py-1"
+          disabled={loading}
+        />
+      </div>
+
+      {/* Skill Type */}
+      <div>
+        <label className="block font-medium">Skill Type</label>
+        <input
+          name="skillType"
+          value={form.skillType}
+          onChange={handleChange}
+          placeholder="e.g. Machine Learning, React, Docker"
+          required
           className="w-full border rounded px-2 py-1"
           disabled={loading}
         />

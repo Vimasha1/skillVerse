@@ -36,7 +36,7 @@ public class LearningPlan {
     @Future(message = "Deadline must be a future date")
     private LocalDate deadline;
 
-    @NotBlank(message = "CreatedBy is required")
+
     private String createdBy;
 
     private List<String> sharedWith = new ArrayList<>();
