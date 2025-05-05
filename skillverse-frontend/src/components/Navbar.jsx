@@ -13,11 +13,15 @@ const Navbar = () => {
       <div className="flex items-center space-x-4">
         <Link to="/login" className="hover:text-blue-300">Login</Link>
         <Link to="/user-profiles/register" className="hover:text-blue-300">Register</Link>
-        <img
-          src="https://via.placeholder.com/30"
-          alt="Profile"
-          className="rounded-full w-8 h-8 border-2 border-white"
-        />
+
+        {/* Profile image with a link to the user profile page */}
+        <Link to="/user-profiles">
+          <img
+            src="https://via.placeholder.com/30"
+            alt="Profile"
+            className="rounded-full w-8 h-8 border-2 border-white cursor-pointer"
+          />
+        </Link>
       </div>
     </nav>
   );
