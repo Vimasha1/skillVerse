@@ -1,26 +1,26 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useParams }             from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { createPlan, updatePlan, getPlanById } from '../api/learningPlans';
 
 const emptyMilestone = () => ({ name: '', dueDate: '', completed: false });
+const emptyResource  = () => ({ type: 'VIDEO', url: '' });
 
 export default function CreateLearningPlanForm({ editMode = false }) {
-  const { id }     = useParams();
-  const navigate   = useNavigate();
+  const { id } = useParams();
+  const navigate = useNavigate();
 
-  const [form, setForm]       = useState({
+  const [form, setForm] = useState({
     title: '',
     topics: '',
     skillType: '',
-    resources: '',
+    resources: [ emptyResource() ],
     deadline: '',
-    milestones: [emptyMilestone()],
+    milestones: [ emptyMilestone() ],
     visibility: 'private',
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError]     = useState('');
+  const [error, setError] = useState('');
 
-  // Load existing plan when editing
   useEffect(() => {
     if (editMode && id) {
       setLoading(true);
@@ -28,11 +28,21 @@ export default function CreateLearningPlanForm({ editMode = false }) {
         .then(res => setForm({
           ...res.data,
           skillType: res.data.skillType || '',
-          milestones: res.data.milestones.length 
-            ? res.data.milestones 
-            : [emptyMilestone()],
+          resources: Array.isArray(res.data.resources) && res.data.resources.length
+            ? res.data.resources
+            : [ emptyResource() ],
+          milestones: Array.isArray(res.data.milestones) && res.data.milestones.length
+            ? res.data.milestones
+            : [ emptyMilestone() ],
         }))
-        .catch(err => setError(err.message))
+        .catch(err => {
+          const data = err.response?.data;
+          setError(
+            typeof data === 'string'
+              ? data
+              : data?.message || JSON.stringify(data)
+          );
+        })
         .finally(() => setLoading(false));
     }
   }, [editMode, id]);
@@ -56,7 +66,23 @@ export default function CreateLearningPlanForm({ editMode = false }) {
   const removeMilestone = idx =>
     setForm(f => {
       const m = f.milestones.filter((_, i) => i !== idx);
-      return { ...f, milestones: m.length ? m : [emptyMilestone()] };
+      return { ...f, milestones: m.length ? m : [ emptyMilestone() ] };
+    });
+
+  const addResource = () =>
+    setForm(f => ({ ...f, resources: [...f.resources, emptyResource()] }));
+
+  const removeResource = idx =>
+    setForm(f => {
+      const r = f.resources.filter((_, i) => i !== idx);
+      return { ...f, resources: r.length ? r : [ emptyResource() ] };
+    });
+
+  const updateResource = (idx, field, value) =>
+    setForm(f => {
+      const r = [...f.resources];
+      r[idx] = { ...r[idx], [field]: value };
+      return { ...f, resources: r };
     });
 
   const onSubmit = async e => {
@@ -64,11 +90,18 @@ export default function CreateLearningPlanForm({ editMode = false }) {
     setLoading(true);
     setError('');
     try {
-      if (editMode && id) await updatePlan(id, form);
-      else                await createPlan(form);
+      if (editMode && id) {
+        await updatePlan(id, form);
+      } else {
+        await createPlan(form);
+      }
       navigate('/plans');
-    } catch (e) {
-      setError(e.response?.data || e.message);
+    } catch (err) {
+      const data = err.response?.data;
+      const msg = typeof data === 'string'
+        ? data
+        : data?.message || JSON.stringify(data) || err.message;
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -92,8 +125,8 @@ export default function CreateLearningPlanForm({ editMode = false }) {
           value={form.title}
           onChange={handleChange}
           required
-          className="w-full border rounded px-2 py-1"
           disabled={loading}
+          className="w-full border rounded px-2 py-1"
         />
       </div>
 
@@ -104,8 +137,8 @@ export default function CreateLearningPlanForm({ editMode = false }) {
           name="topics"
           value={form.topics}
           onChange={handleChange}
-          className="w-full border rounded px-2 py-1"
           disabled={loading}
+          className="w-full border rounded px-2 py-1"
         />
       </div>
 
@@ -118,21 +151,59 @@ export default function CreateLearningPlanForm({ editMode = false }) {
           onChange={handleChange}
           placeholder="e.g. Machine Learning, React, Docker"
           required
-          className="w-full border rounded px-2 py-1"
           disabled={loading}
+          className="w-full border rounded px-2 py-1"
         />
       </div>
 
       {/* Resources */}
       <div>
-        <label className="block font-medium">Resources (URLs)</label>
-        <textarea
-          name="resources"
-          value={form.resources}
-          onChange={handleChange}
-          className="w-full border rounded px-2 py-1"
+        <label className="block font-medium mb-1">Resources</label>
+        {form.resources.map((res, i) => (
+          <div key={i} className="flex gap-2 mb-2">
+            <select
+              value={res.type}
+              onChange={e => updateResource(i, 'type', e.target.value)}
+              disabled={loading}
+              className="border rounded px-2 py-1"
+            >
+              <option value="VIDEO">Video</option>
+              <option value="WEBSITE">Website</option>
+              <option value="PDF">PDF</option>
+            </select>
+            <input
+              type="url"
+              placeholder={
+                res.type === 'VIDEO'
+                  ? 'https://youtu.be/...'
+                  : res.type === 'WEBSITE'
+                    ? 'https://example.com'
+                    : 'https://example.com/file.pdf'
+              }
+              value={res.url}
+              onChange={e => updateResource(i, 'url', e.target.value)}
+              required
+              disabled={loading}
+              className="flex-1 border rounded px-2 py-1"
+            />
+            <button
+              type="button"
+              onClick={() => removeResource(i)}
+              disabled={loading}
+              className="text-red-600"
+            >
+              ✕
+            </button>
+          </div>
+        ))}
+        <button
+          type="button"
+          onClick={addResource}
           disabled={loading}
-        />
+          className="text-indigo-600"
+        >
+          + Add Resource
+        </button>
       </div>
 
       {/* Deadline */}
@@ -143,9 +214,9 @@ export default function CreateLearningPlanForm({ editMode = false }) {
           name="deadline"
           value={form.deadline}
           onChange={handleChange}
-          className="border rounded px-2 py-1"
-          disabled={loading}
           required
+          disabled={loading}
+          className="border rounded px-2 py-1"
         />
       </div>
 
@@ -158,15 +229,15 @@ export default function CreateLearningPlanForm({ editMode = false }) {
               placeholder="Name"
               value={ms.name}
               onChange={e => handleMilestoneChange(i, 'name', e.target.value)}
-              className="flex-1 border rounded px-2 py-1"
               disabled={loading}
+              className="flex-1 border rounded px-2 py-1"
             />
             <input
               type="date"
               value={ms.dueDate}
               onChange={e => handleMilestoneChange(i, 'dueDate', e.target.value)}
-              className="border rounded px-2 py-1"
               disabled={loading}
+              className="border rounded px-2 py-1"
             />
             <button
               type="button"

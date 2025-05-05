@@ -29,13 +29,14 @@ public class LearningPlan {
     @NotBlank(message = "Skill type is required")
     private String skillType;
 
-    @NotBlank(message = "Resources must not be empty")
-    private String resources;
+    // ← changed from String to List<Resource>
+    @Valid
+    @NotEmpty(message = "At least one resource is required")
+    private List<Resource> resources = new ArrayList<>();
 
     @NotNull(message = "Deadline is required")
     @Future(message = "Deadline must be a future date")
     private LocalDate deadline;
-
 
     private String createdBy;
 
@@ -49,16 +50,12 @@ public class LearningPlan {
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private LocalDateTime updatedAt;
 
-    // ─── Milestones & Progress ────────────────────────────────────────────────
-
     @Valid
     private List<Milestone> milestones = new ArrayList<>();
 
     @DecimalMin(value = "0.0", inclusive = true, message = "Progress cannot be less than 0.0")
     @DecimalMax(value = "1.0", inclusive = true, message = "Progress cannot be more than 1.0")
     private double progress = 0.0;
-
-    // ─── Other Interactive Fields ─────────────────────────────────────────────
 
     @Valid
     private List<@Future LocalDateTime> reminders = new ArrayList<>();
@@ -84,6 +81,7 @@ public class LearningPlan {
 
     private List<String> feedback = new ArrayList<>();
 
+
     // ─── Getters & Setters ────────────────────────────────────────────────────
 
     public String getId() { return id; }
@@ -98,8 +96,8 @@ public class LearningPlan {
     public String getSkillType() { return skillType; }
     public void setSkillType(String skillType) { this.skillType = skillType; }
 
-    public String getResources() { return resources; }
-    public void setResources(String resources) { this.resources = resources; }
+    public List<Resource> getResources() { return resources; }
+    public void setResources(List<Resource> resources) { this.resources = resources; }
 
     public LocalDate getDeadline() { return deadline; }
     public void setDeadline(LocalDate deadline) { this.deadline = deadline; }
@@ -146,6 +144,7 @@ public class LearningPlan {
     public List<String> getFeedback() { return feedback; }
     public void setFeedback(List<String> feedback) { this.feedback = feedback; }
 
+
     // ─── Progress Calculator ───────────────────────────────────────────────────
 
     /**
@@ -162,7 +161,32 @@ public class LearningPlan {
         }
     }
 
-    // ─── Inner Milestone Class ─────────────────────────────────────────────────
+
+    // ─── Inner Classes ─────────────────────────────────────────────────────────
+
+    public static class Resource {
+        public enum Type { VIDEO, WEBSITE, PDF }
+
+        @NotNull(message = "Resource type is required")
+        private Type type;
+
+        @NotBlank(message = "URL is required")
+        @Pattern(regexp = "https?://.*", message = "Must be a valid URL")
+        private String url;
+
+        public Resource() { }
+
+        public Resource(Type type, String url) {
+            this.type = type;
+            this.url = url;
+        }
+
+        public Type getType() { return type; }
+        public void setType(Type type) { this.type = type; }
+
+        public String getUrl() { return url; }
+        public void setUrl(String url) { this.url = url; }
+    }
 
     public static class Milestone {
         @NotBlank(message = "Milestone name is required")
@@ -190,4 +214,5 @@ public class LearningPlan {
         public boolean isCompleted() { return completed; }
         public void setCompleted(boolean completed) { this.completed = completed; }
     }
+
 }
