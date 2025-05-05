@@ -2,8 +2,10 @@ C:\Users\USER\Desktop\PAF\skillVerseRepo\skillVerse\backend\backend\src\main\jav
 C:\Users\USER\Desktop\PAF\skillVerseRepo\skillVerse\backend\backend\src\main\java\com\skillverse\config\SecurityConfig.java
 C:\Users\USER\Desktop\PAF\skillVerseRepo\skillVerse\backend\backend\src\main\java\com\skillverse\controller\LearningPlanController.java
 C:\Users\USER\Desktop\PAF\skillVerseRepo\skillVerse\backend\backend\src\main\java\com\skillverse\controller\PostController.java
+C:\Users\USER\Desktop\PAF\skillVerseRepo\skillVerse\backend\backend\src\main\java\com\skillverse\model\Comment.java
 C:\Users\USER\Desktop\PAF\skillVerseRepo\skillVerse\backend\backend\src\main\java\com\skillverse\model\LearningPlan.java
 C:\Users\USER\Desktop\PAF\skillVerseRepo\skillVerse\backend\backend\src\main\java\com\skillverse\model\Post.java
+C:\Users\USER\Desktop\PAF\skillVerseRepo\skillVerse\backend\backend\src\main\java\com\skillverse\model\Reply.java
 C:\Users\USER\Desktop\PAF\skillVerseRepo\skillVerse\backend\backend\src\main\java\com\skillverse\repository\LearningPlanRepository.java
 C:\Users\USER\Desktop\PAF\skillVerseRepo\skillVerse\backend\backend\src\main\java\com\skillverse\repository\PostRepository.java
 C:\Users\USER\Desktop\PAF\skillVerseRepo\skillVerse\backend\backend\src\main\java\com\skillverse\service\LearningPlanService.java
