@@ -1,3 +1,4 @@
+
 E:\SLIIT\Academic\Year 3\Sem 1\PAF\skillverse\skillVerse\backend\backend\src\main\java\com\skillverse\BackendApplication.java
 E:\SLIIT\Academic\Year 3\Sem 1\PAF\skillverse\skillVerse\backend\backend\src\main\java\com\skillverse\config\SecurityConfig.java
 E:\SLIIT\Academic\Year 3\Sem 1\PAF\skillverse\skillVerse\backend\backend\src\main\java\com\skillverse\controller\AuthController.java
@@ -24,3 +25,17 @@ E:\SLIIT\Academic\Year 3\Sem 1\PAF\skillverse\skillVerse\backend\backend\src\mai
 E:\SLIIT\Academic\Year 3\Sem 1\PAF\skillverse\skillVerse\backend\backend\src\main\java\com\skillverse\service\ProgressTemplateService.java
 E:\SLIIT\Academic\Year 3\Sem 1\PAF\skillverse\skillVerse\backend\backend\src\main\java\com\skillverse\service\ProgressUpdateService.java
 E:\SLIIT\Academic\Year 3\Sem 1\PAF\skillverse\skillVerse\backend\backend\src\main\java\com\skillverse\service\UserProfileService.java
+
+C:\Users\USER\Desktop\PAF\skillVerseRepo\skillVerse\backend\backend\src\main\java\com\skillverse\BackendApplication.java
+C:\Users\USER\Desktop\PAF\skillVerseRepo\skillVerse\backend\backend\src\main\java\com\skillverse\config\SecurityConfig.java
+C:\Users\USER\Desktop\PAF\skillVerseRepo\skillVerse\backend\backend\src\main\java\com\skillverse\controller\LearningPlanController.java
+C:\Users\USER\Desktop\PAF\skillVerseRepo\skillVerse\backend\backend\src\main\java\com\skillverse\controller\PostController.java
+C:\Users\USER\Desktop\PAF\skillVerseRepo\skillVerse\backend\backend\src\main\java\com\skillverse\model\Comment.java
+C:\Users\USER\Desktop\PAF\skillVerseRepo\skillVerse\backend\backend\src\main\java\com\skillverse\model\LearningPlan.java
+C:\Users\USER\Desktop\PAF\skillVerseRepo\skillVerse\backend\backend\src\main\java\com\skillverse\model\Post.java
+C:\Users\USER\Desktop\PAF\skillVerseRepo\skillVerse\backend\backend\src\main\java\com\skillverse\model\Reply.java
+C:\Users\USER\Desktop\PAF\skillVerseRepo\skillVerse\backend\backend\src\main\java\com\skillverse\repository\LearningPlanRepository.java
+C:\Users\USER\Desktop\PAF\skillVerseRepo\skillVerse\backend\backend\src\main\java\com\skillverse\repository\PostRepository.java
+C:\Users\USER\Desktop\PAF\skillVerseRepo\skillVerse\backend\backend\src\main\java\com\skillverse\service\LearningPlanService.java
+C:\Users\USER\Desktop\PAF\skillVerseRepo\skillVerse\backend\backend\src\main\java\com\skillverse\service\PostService.java
+

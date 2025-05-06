@@ -1,13 +1,20 @@
+// src/App.jsx
+
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+
 import Navbar from './components/Navbar';
 import HomePage from './components/HomePage';
 import CreatePostForm from './components/CreatePostForm';
 
-import UserProfilePage from './components/UserProfile'; // Import User Profile Page
-import LoginPage from './components/LoginPage'; // Import Login page
-import ProgressUpdatePage from './components/ProgressUpdatePage'; // Import ProgressUpdate page
-import UserProfileUpdateForm from './components/UserProfileUpdateForm';
+import LearningPlanList from './components/LearningPlanList';
+import CreateLearningPlanForm from './components/CreateLearningPlanForm';
+import PlanDetailPage from './components/PlanDetailPage';
+
+import UserProfilePage from './components/UserProfile';              // User Profile Page
+import LoginPage from './components/LoginPage';                     // Login Page
+import ProgressUpdatePage from './components/ProgressUpdatePage';   // Progress Update Page
+import UserProfileUpdateForm from './components/UserProfileUpdateForm'; // Profile Edit Form
 
 import './App.css';
 
@@ -18,12 +25,26 @@ function App() {
         <Navbar />
         <div className="p-6 max-w-3xl mx-auto">
           <Routes>
+            {/* Home & Posts */}
             <Route path="/" element={<HomePage />} />
             <Route path="/create" element={<CreatePostForm />} />
-            <Route path="/user-profiles/:id" element={<UserProfilePage />} /> {/* User Profile Page */}
-            <Route path="/login" element={<LoginPage />} /> {/* Login Page */}
-            <Route path="/progress-update" element={<ProgressUpdatePage />} /> {/* Progress Update Page */}
+
+            {/* Learning Plans CRUD */}
+            <Route path="/plans" element={<LearningPlanList />} />
+            <Route path="/plans/create" element={<CreateLearningPlanForm />} />
+            <Route path="/plans/:id" element={<PlanDetailPage />} />
+            <Route
+              path="/plans/:id/edit"
+              element={<CreateLearningPlanForm editMode />}
+            />
+
+            {/* User Profile & Authentication */}
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/user-profiles/:id" element={<UserProfilePage />} />
             <Route path="/user-profiles/edit/:id" element={<UserProfileUpdateForm />} />
+
+            {/* Progress Updates */}
+            <Route path="/progress-update" element={<ProgressUpdatePage />} />
           </Routes>
         </div>
       </div>
