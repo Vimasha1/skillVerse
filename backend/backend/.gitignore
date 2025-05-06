@@ -31,3 +31,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# ignore IDE/build scratch files
+**/inputFiles.lst
