@@ -15,7 +15,7 @@ const Navbar = () => {
         <Link to="/user-profiles/register" className="hover:text-blue-300">Register</Link>
 
         {/* Profile image with a link to the user profile page */}
-        <Link to="/user-profiles">
+        <Link to="/user-profiles/:id">
           <img
             src="https://via.placeholder.com/30"
             alt="Profile"

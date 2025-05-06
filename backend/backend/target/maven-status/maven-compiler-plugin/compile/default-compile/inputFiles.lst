@@ -1,5 +1,6 @@
 E:\SLIIT\Academic\Year 3\Sem 1\PAF\skillverse\skillVerse\backend\backend\src\main\java\com\skillverse\BackendApplication.java
 E:\SLIIT\Academic\Year 3\Sem 1\PAF\skillverse\skillVerse\backend\backend\src\main\java\com\skillverse\config\SecurityConfig.java
+E:\SLIIT\Academic\Year 3\Sem 1\PAF\skillverse\skillVerse\backend\backend\src\main\java\com\skillverse\controller\AuthController.java
 E:\SLIIT\Academic\Year 3\Sem 1\PAF\skillverse\skillVerse\backend\backend\src\main\java\com\skillverse\controller\LearningPlanController.java
 E:\SLIIT\Academic\Year 3\Sem 1\PAF\skillverse\skillVerse\backend\backend\src\main\java\com\skillverse\controller\PostController.java
 E:\SLIIT\Academic\Year 3\Sem 1\PAF\skillverse\skillVerse\backend\backend\src\main\java\com\skillverse\controller\ProgressTemplateController.java
@@ -17,6 +18,7 @@ E:\SLIIT\Academic\Year 3\Sem 1\PAF\skillverse\skillVerse\backend\backend\src\mai
 E:\SLIIT\Academic\Year 3\Sem 1\PAF\skillverse\skillVerse\backend\backend\src\main\java\com\skillverse\repository\ProgressTemplateRepository.java
 E:\SLIIT\Academic\Year 3\Sem 1\PAF\skillverse\skillVerse\backend\backend\src\main\java\com\skillverse\repository\ProgressUpdateRepository.java
 E:\SLIIT\Academic\Year 3\Sem 1\PAF\skillverse\skillVerse\backend\backend\src\main\java\com\skillverse\repository\UserProfileRepository.java
+E:\SLIIT\Academic\Year 3\Sem 1\PAF\skillverse\skillVerse\backend\backend\src\main\java\com\skillverse\service\AuthService.java
 E:\SLIIT\Academic\Year 3\Sem 1\PAF\skillverse\skillVerse\backend\backend\src\main\java\com\skillverse\service\LearningPlanService.java
 E:\SLIIT\Academic\Year 3\Sem 1\PAF\skillverse\skillVerse\backend\backend\src\main\java\com\skillverse\service\PostService.java
 E:\SLIIT\Academic\Year 3\Sem 1\PAF\skillverse\skillVerse\backend\backend\src\main\java\com\skillverse\service\ProgressTemplateService.java

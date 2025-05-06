@@ -4,10 +4,10 @@ import Navbar from './components/Navbar';
 import HomePage from './components/HomePage';
 import CreatePostForm from './components/CreatePostForm';
 
-import UserRegisterForm from './components/UserRegisterForm'; // Import User Register form
 import UserProfilePage from './components/UserProfile'; // Import User Profile Page
 import LoginPage from './components/LoginPage'; // Import Login page
 import ProgressUpdatePage from './components/ProgressUpdatePage'; // Import ProgressUpdate page
+import UserProfileUpdateForm from './components/UserProfileUpdateForm';
 
 import './App.css';
 
@@ -20,10 +20,10 @@ function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/create" element={<CreatePostForm />} />
-            <Route path="/user-profiles/register" element={<UserRegisterForm />} /> {/* User Profile Register */}
-            <Route path="/user-profiles" element={<UserProfilePage />} /> {/* User Profile Page */}
+            <Route path="/user-profiles/:id" element={<UserProfilePage />} /> {/* User Profile Page */}
             <Route path="/login" element={<LoginPage />} /> {/* Login Page */}
             <Route path="/progress-update" element={<ProgressUpdatePage />} /> {/* Progress Update Page */}
+            <Route path="/user-profiles/edit/:id" element={<UserProfileUpdateForm />} />
           </Routes>
         </div>
       </div>

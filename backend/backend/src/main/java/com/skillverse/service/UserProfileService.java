@@ -46,7 +46,9 @@ public class UserProfileService {
             profile.setEmail(userProfile.getEmail());
             profile.setPhone(userProfile.getPhone());
             profile.setAddress(userProfile.getAddress());
-            
+            profile.setEducation(userProfile.getEducation());
+            profile.setJobPosition(userProfile.getJobPosition());
+            profile.setCompany(userProfile.getCompany());
             // Only hash the password if it's being updated (not null or empty)
             if (userProfile.getPassword() != null && !userProfile.getPassword().isEmpty()) {
                 String hashedPassword = passwordEncoder.encode(userProfile.getPassword());

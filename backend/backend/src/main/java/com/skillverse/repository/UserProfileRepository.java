@@ -1,9 +1,11 @@
+// src/main/java/com/skillverse/repository/UserProfileRepository.java
 package com.skillverse.repository;
 
 import com.skillverse.model.UserProfile;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
-public interface UserProfileRepository extends MongoRepository<UserProfile, String> {
-    // Custom query methods can be added here if needed
-}
+import java.util.Optional;
 
+public interface UserProfileRepository extends MongoRepository<UserProfile, String> {
+    Optional<UserProfile> findByUsername(String username);
+}

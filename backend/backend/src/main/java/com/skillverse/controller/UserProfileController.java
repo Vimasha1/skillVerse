@@ -1,13 +1,14 @@
-package com.skillverse.controller;  // Corrected package declaration
+package com.skillverse.controller;
 
 import com.skillverse.model.UserProfile;
 import com.skillverse.service.UserProfileService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@CrossOrigin(origins = "http://localhost:3000")
 @RestController
 @RequestMapping("/api/user-profiles")
 public class UserProfileController {
@@ -15,47 +16,49 @@ public class UserProfileController {
     @Autowired
     private UserProfileService userProfileService;
 
-    // Get all user profiles
+    // GET /api/user-profiles
     @GetMapping
     public ResponseEntity<List<UserProfile>> getAllUserProfiles() {
-        List<UserProfile> userProfiles = userProfileService.getAllUserProfiles();
-        return ResponseEntity.ok(userProfiles);
+        return ResponseEntity.ok(userProfileService.getAllUserProfiles());
     }
 
-    // Get a user profile by ID
+    // GET /api/user-profiles/{id}
     @GetMapping("/{id}")
     public ResponseEntity<UserProfile> getUserProfileById(@PathVariable String id) {
-        UserProfile userProfile = userProfileService.getUserProfileById(id);
-        if (userProfile == null) {
-            return ResponseEntity.notFound().build(); // Return 404 if not found
+        UserProfile profile = userProfileService.getUserProfileById(id);
+        if (profile == null) {
+            return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok(userProfile); // Return 200 OK with the user profile
+        return ResponseEntity.ok(profile);
     }
 
-    // Create a new user profile
+    // POST /api/user-profiles/create
     @PostMapping("/create")
     public ResponseEntity<UserProfile> createUserProfile(@RequestBody UserProfile userProfile) {
-        UserProfile createdProfile = userProfileService.createUserProfile(userProfile);
-        return ResponseEntity.status(201).body(createdProfile); // Return 201 Created
+        UserProfile created = userProfileService.createUserProfile(userProfile);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
-    // Update an existing user profile
+    // PUT /api/user-profiles/update/{id}
     @PutMapping("/update/{id}")
-    public ResponseEntity<UserProfile> updateUserProfile(@PathVariable String id, @RequestBody UserProfile userProfile) {
-        UserProfile updatedProfile = userProfileService.updateUserProfile(id, userProfile);
-        if (updatedProfile == null) {
-            return ResponseEntity.notFound().build(); // Return 404 if not found
+    public ResponseEntity<UserProfile> updateUserProfile(
+            @PathVariable String id,
+            @RequestBody UserProfile userProfile) {
+
+        UserProfile updated = userProfileService.updateUserProfile(id, userProfile);
+        if (updated == null) {
+            return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok(updatedProfile); // Return 200 OK with the updated profile
+        return ResponseEntity.ok(updated);
     }
 
-    // Delete a user profile by ID
+    // DELETE /api/user-profiles/delete/{id}
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<Void> deleteUserProfile(@PathVariable String id) {
         boolean deleted = userProfileService.deleteUserProfile(id);
         if (!deleted) {
-            return ResponseEntity.notFound().build(); // Return 404 if not found
+            return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.noContent().build(); // Return 204 No Content if deleted successfully
+        return ResponseEntity.noContent().build();
     }
 }
