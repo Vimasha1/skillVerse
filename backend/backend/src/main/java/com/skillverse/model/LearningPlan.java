@@ -23,13 +23,13 @@ public class LearningPlan {
     @Size(min = 3, max = 100, message = "Title must be between 3 and 100 characters")
     private String title;
 
-    @NotBlank(message = "Topics must not be empty")
-    private String topics;
+    /** Allow multiple non-blank topics */
+    @NotEmpty(message = "At least one topic is required")
+    private List<@NotBlank(message = "Topic must not be blank") String> topics = new ArrayList<>();
 
     @NotBlank(message = "Skill type is required")
     private String skillType;
 
-    // ← changed from String to List<Resource>
     @Valid
     @NotEmpty(message = "At least one resource is required")
     private List<Resource> resources = new ArrayList<>();
@@ -39,7 +39,6 @@ public class LearningPlan {
     private LocalDate deadline;
 
     private String createdBy;
-
     private List<String> sharedWith = new ArrayList<>();
 
     @CreatedDate
@@ -59,7 +58,6 @@ public class LearningPlan {
 
     @Valid
     private List<@Future LocalDateTime> reminders = new ArrayList<>();
-
     private List<String> collaborators = new ArrayList<>();
 
     @Pattern(regexp = "private|shared|public", message = "Visibility must be 'private', 'shared', or 'public'")
@@ -81,7 +79,6 @@ public class LearningPlan {
 
     private List<String> feedback = new ArrayList<>();
 
-
     // ─── Getters & Setters ────────────────────────────────────────────────────
 
     public String getId() { return id; }
@@ -90,8 +87,8 @@ public class LearningPlan {
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
 
-    public String getTopics() { return topics; }
-    public void setTopics(String topics) { this.topics = topics; }
+    public List<String> getTopics() { return topics; }
+    public void setTopics(List<String> topics) { this.topics = topics; }
 
     public String getSkillType() { return skillType; }
     public void setSkillType(String skillType) { this.skillType = skillType; }
@@ -214,5 +211,4 @@ public class LearningPlan {
         public boolean isCompleted() { return completed; }
         public void setCompleted(boolean completed) { this.completed = completed; }
     }
-
 }

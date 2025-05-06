@@ -1,17 +1,22 @@
+// src/components/CreateLearningPlanForm.jsx
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams }             from 'react-router-dom';
 import { createPlan, updatePlan, getPlanById } from '../api/learningPlans';
 
 const emptyMilestone = () => ({ name: '', dueDate: '', completed: false });
 const emptyResource  = () => ({ type: 'VIDEO', url: '' });
 
 export default function CreateLearningPlanForm({ editMode = false }) {
-  const { id } = useParams();
-  const navigate = useNavigate();
+  const { id }       = useParams();
+  const navigate     = useNavigate();
 
+  // — DIY chip input for topics —
+  const [topics, setTopics]         = useState([]);
+  const [topicInput, setTopicInput] = useState('');
+
+  // — rest of the form state —
   const [form, setForm] = useState({
     title: '',
-    topics: '',
     skillType: '',
     resources: [ emptyResource() ],
     deadline: '',
@@ -19,39 +24,60 @@ export default function CreateLearningPlanForm({ editMode = false }) {
     visibility: 'private',
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError]     = useState('');
 
+  // Load existing plan when editing
   useEffect(() => {
     if (editMode && id) {
       setLoading(true);
       getPlanById(id)
-        .then(res => setForm({
-          ...res.data,
-          skillType: res.data.skillType || '',
-          resources: Array.isArray(res.data.resources) && res.data.resources.length
-            ? res.data.resources
-            : [ emptyResource() ],
-          milestones: Array.isArray(res.data.milestones) && res.data.milestones.length
-            ? res.data.milestones
-            : [ emptyMilestone() ],
-        }))
+        .then(res => {
+          const data = res.data;
+          setForm({
+            title:     data.title || '',
+            skillType: data.skillType || '',
+            resources: data.resources?.length
+              ? data.resources
+              : [ emptyResource() ],
+            deadline:  data.deadline || '',
+            milestones: data.milestones?.length
+              ? data.milestones
+              : [ emptyMilestone() ],
+            visibility: data.visibility || 'private',
+          });
+          setTopics(data.topics || []);
+        })
         .catch(err => {
-          const data = err.response?.data;
-          setError(
-            typeof data === 'string'
-              ? data
-              : data?.message || JSON.stringify(data)
-          );
+          console.error('Load error:', err.response?.data || err);
+          setError('Could not load plan');
         })
         .finally(() => setLoading(false));
     }
   }, [editMode, id]);
 
+  // Generic field change
   const handleChange = e => {
     const { name, value } = e.target;
     setForm(f => ({ ...f, [name]: value }));
   };
 
+  // — Topic chip handlers —
+  const handleTopicKeyDown = e => {
+    if (e.key === 'Enter' && topicInput.trim()) {
+      e.preventDefault();
+      setTopics(ts => [...ts, topicInput.trim()]);
+      setTopicInput('');
+    }
+  };
+  const addTopic = () => {
+    if (!topicInput.trim()) return;
+    setTopics(ts => [...ts, topicInput.trim()]);
+    setTopicInput('');
+  };
+  const removeTopic = idx =>
+    setTopics(ts => ts.filter((_, i) => i !== idx));
+
+  // — Milestone handlers —
   const handleMilestoneChange = (idx, field, value) => {
     setForm(f => {
       const m = [...f.milestones];
@@ -59,25 +85,22 @@ export default function CreateLearningPlanForm({ editMode = false }) {
       return { ...f, milestones: m };
     });
   };
-
   const addMilestone = () =>
     setForm(f => ({ ...f, milestones: [...f.milestones, emptyMilestone()] }));
-
   const removeMilestone = idx =>
     setForm(f => {
       const m = f.milestones.filter((_, i) => i !== idx);
-      return { ...f, milestones: m.length ? m : [ emptyMilestone() ] };
+      return { ...f, milestones: m.length ? m : [emptyMilestone()] };
     });
 
+  // — Resource handlers —
   const addResource = () =>
     setForm(f => ({ ...f, resources: [...f.resources, emptyResource()] }));
-
   const removeResource = idx =>
     setForm(f => {
       const r = f.resources.filter((_, i) => i !== idx);
-      return { ...f, resources: r.length ? r : [ emptyResource() ] };
+      return { ...f, resources: r.length ? r : [emptyResource()] };
     });
-
   const updateResource = (idx, field, value) =>
     setForm(f => {
       const r = [...f.resources];
@@ -85,30 +108,48 @@ export default function CreateLearningPlanForm({ editMode = false }) {
       return { ...f, resources: r };
     });
 
+  // — Submit form —
   const onSubmit = async e => {
     e.preventDefault();
     setLoading(true);
     setError('');
+
+    // Build payload
+    const payload = {
+      title:     form.title,
+      skillType: form.skillType,
+      topics,  // 🚀 array of strings
+      resources: form.resources.map(r => ({
+        type: r.type,
+        url: r.url.trim(),
+      })),
+      deadline: form.deadline,
+      milestones: form.milestones.map(ms => ({
+        name:     ms.name,
+        dueDate:  ms.dueDate,
+        completed: ms.completed,
+      })),
+      visibility: form.visibility,
+    };
+
     try {
-      if (editMode && id) {
-        await updatePlan(id, form);
-      } else {
-        await createPlan(form);
-      }
+      if (editMode && id) await updatePlan(id, payload);
+      else                await createPlan(payload);
       navigate('/plans');
-    } catch (err) {
-      const data = err.response?.data;
-      const msg = typeof data === 'string'
-        ? data
-        : data?.message || JSON.stringify(data) || err.message;
-      setError(msg);
+    } catch (e) {
+      console.error('Submit error:', e.response?.data || e);
+      setError(
+        e.response?.data?.message ||
+        JSON.stringify(e.response?.data) ||
+        e.message
+      );
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4 bg-white p-6 rounded shadow">
+    <form onSubmit={onSubmit} className="space-y-6 bg-white p-6 rounded shadow">
       <h2 className="text-2xl">
         {editMode ? 'Edit Learning Plan' : 'Create New Learning Plan'}
       </h2>
@@ -130,16 +171,46 @@ export default function CreateLearningPlanForm({ editMode = false }) {
         />
       </div>
 
-      {/* Topics */}
+      {/* DIY Topics Chip Input */}
       <div>
-        <label className="block font-medium">Topics (comma-separated)</label>
-        <input
-          name="topics"
-          value={form.topics}
-          onChange={handleChange}
-          disabled={loading}
-          className="w-full border rounded px-2 py-1"
-        />
+        <label className="block font-medium mb-1">Topics</label>
+        {/* Chips */}
+        <div className="flex flex-wrap gap-2 mb-2">
+          {topics.map((t, i) => (
+            <span
+              key={i}
+              className="bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full flex items-center"
+            >
+              {t}
+              <button
+                type="button"
+                onClick={() => removeTopic(i)}
+                className="ml-1 text-indigo-600 font-bold"
+              >
+                &times;
+              </button>
+            </span>
+          ))}
+        </div>
+        {/* Input + Add */}
+        <div className="flex gap-2">
+          <input
+            value={topicInput}
+            onChange={e => setTopicInput(e.target.value)}
+            onKeyDown={handleTopicKeyDown}
+            placeholder="Add a topic and press Enter"
+            disabled={loading}
+            className="flex-1 border rounded px-2 py-1"
+          />
+          <button
+            type="button"
+            onClick={addTopic}
+            disabled={!topicInput.trim() || loading}
+            className="px-4 bg-green-500 text-white rounded"
+          >
+            Add
+          </button>
+        </div>
       </div>
 
       {/* Skill Type */}
@@ -176,9 +247,9 @@ export default function CreateLearningPlanForm({ editMode = false }) {
               placeholder={
                 res.type === 'VIDEO'
                   ? 'https://youtu.be/...'
-                  : res.type === 'WEBSITE'
-                    ? 'https://example.com'
-                    : 'https://example.com/file.pdf'
+                  : res.type === 'PDF'
+                    ? 'https://example.com/file.pdf'
+                    : 'https://example.com'
               }
               value={res.url}
               onChange={e => updateResource(i, 'url', e.target.value)}
@@ -214,9 +285,9 @@ export default function CreateLearningPlanForm({ editMode = false }) {
           name="deadline"
           value={form.deadline}
           onChange={handleChange}
-          required
-          disabled={loading}
           className="border rounded px-2 py-1"
+          disabled={loading}
+          required
         />
       </div>
 
@@ -229,15 +300,15 @@ export default function CreateLearningPlanForm({ editMode = false }) {
               placeholder="Name"
               value={ms.name}
               onChange={e => handleMilestoneChange(i, 'name', e.target.value)}
-              disabled={loading}
               className="flex-1 border rounded px-2 py-1"
+              disabled={loading}
             />
             <input
               type="date"
               value={ms.dueDate}
               onChange={e => handleMilestoneChange(i, 'dueDate', e.target.value)}
-              disabled={loading}
               className="border rounded px-2 py-1"
+              disabled={loading}
             />
             <button
               type="button"

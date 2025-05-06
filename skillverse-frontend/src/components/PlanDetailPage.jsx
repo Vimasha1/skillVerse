@@ -34,15 +34,25 @@ export default function PlanDetailPage() {
   if (!plan) return <p>Loading…</p>;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <h1 className="text-2xl font-bold">{plan.title}</h1>
-      <p><strong>Topics:</strong> {plan.topics}</p>
 
-      {/* ← Fixed Resources rendering */}
+      {/* Topics as a bulleted list */}
+      <div>
+        <strong>Topics:</strong>
+        <ul className="list-disc pl-5 mt-1">
+          {Array.isArray(plan.topics)
+            ? plan.topics.map((t, i) => <li key={i}>{t}</li>)
+            : plan.topics.split(',').map((t, i) => <li key={i}>{t.trim()}</li>)
+          }
+        </ul>
+      </div>
+
+      {/* Resources */}
       <div>
         <strong>Resources:</strong>
         {plan.resources && plan.resources.length > 0 ? (
-          <ul className="list-disc pl-5">
+          <ul className="list-disc pl-5 mt-1">
             {plan.resources.map((res, i) => (
               <li key={i}>
                 <a
@@ -61,8 +71,8 @@ export default function PlanDetailPage() {
         )}
       </div>
 
+      {/* Deadline & Progress */}
       <p><strong>Deadline:</strong> {plan.deadline}</p>
-
       <p><strong>Progress:</strong> {(plan.progress * 100).toFixed(0)}%</p>
       <div className="w-full bg-gray-200 rounded h-2">
         <div
@@ -71,10 +81,11 @@ export default function PlanDetailPage() {
         />
       </div>
 
-      <h2 className="mt-4 font-semibold">Milestones</h2>
-      <ul className="list-disc pl-5">
+      {/* Milestones with toggle */}
+      <h2 className="mt-6 font-semibold">Milestones</h2>
+      <ul className="list-disc pl-5 mt-1">
         {milestones.map((ms, i) => (
-          <li key={i}>
+          <li key={i} className="flex items-center">
             <input
               type="checkbox"
               checked={ms.completed}
@@ -86,7 +97,8 @@ export default function PlanDetailPage() {
         ))}
       </ul>
 
-      <div className="space-x-2">
+      {/* Actions */}
+      <div className="space-x-2 mt-4">
         <Link
           to={`/plans/${id}/edit`}
           className="px-4 py-2 bg-yellow-500 text-white rounded"
