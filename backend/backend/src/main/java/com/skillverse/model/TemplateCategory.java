@@ -18,13 +18,13 @@ public class TemplateCategory {
     private String icon;
 
     /** defines the extra fields required when using this category */
-    private List<FieldDefinition> fields;
+    private List<TemplateField> fields;
 
     public TemplateCategory() {}
 
     public TemplateCategory(String name,
                             String icon,
-                            List<FieldDefinition> fields) {
+                            List<TemplateField> fields) {
         this.name   = name;
         this.icon   = icon;
         this.fields = fields;
@@ -38,6 +38,6 @@ public class TemplateCategory {
     public String getIcon() { return icon; }
     public void setIcon(String icon) { this.icon = icon; }
 
-    public List<FieldDefinition> getFields() { return fields; }
-    public void setFields(List<FieldDefinition> fields) { this.fields = fields; }
+    public List<TemplateField> getFields() { return fields; }
+    public void setFields(List<TemplateField> fields) { this.fields = fields; }
 }

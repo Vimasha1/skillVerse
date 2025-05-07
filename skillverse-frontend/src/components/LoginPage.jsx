@@ -1,6 +1,9 @@
+// src/components/LoginPage.jsx
+
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
+import { FaGoogle, FaLinkedin } from 'react-icons/fa';
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -9,7 +12,7 @@ const LoginPage = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setCredentials(prev => ({ ...prev, [name]: value }));
+    setCredentials((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
@@ -47,6 +50,16 @@ const LoginPage = () => {
       }
       setMessage(msg);
     }
+  };
+
+  const handleGoogleLogin = () => {
+    // Replace with your backend’s Google OAuth endpoint
+    window.location.href = 'http://localhost:8081/api/auth/google';
+  };
+
+  const handleLinkedInLogin = () => {
+    // Replace with your backend’s LinkedIn OAuth endpoint
+    window.location.href = 'http://localhost:8081/api/auth/linkedin';
   };
 
   return (
@@ -87,6 +100,38 @@ const LoginPage = () => {
           </button>
         </div>
       </form>
+
+      {/* OAuth Buttons */}
+      <div className="mt-6 space-y-3">
+        <button
+          onClick={handleGoogleLogin}
+          className="w-full flex items-center justify-center px-4 py-2 border rounded-lg hover:bg-gray-100 transition"
+        >
+          <FaGoogle className="mr-2 text-red-500" /> Login with Google
+        </button>
+        <button
+          onClick={handleLinkedInLogin}
+          className="w-full flex items-center justify-center px-4 py-2 border rounded-lg hover:bg-gray-100 transition"
+        >
+          <FaLinkedin className="mr-2 text-blue-700" /> Login with LinkedIn
+        </button>
+      </div>
+
+      {/* Links */}
+      <div className="mt-4 flex justify-between text-sm">
+        <Link
+          to="/forgot-password"
+          className="text-blue-500 hover:underline"
+        >
+          Forgot password?
+        </Link>
+        <Link
+          to="/user-profiles/register"
+          className="text-blue-500 hover:underline"
+        >
+          Don’t have an account? Register
+        </Link>
+      </div>
     </div>
   );
 };

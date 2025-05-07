@@ -3,6 +3,7 @@ package com.skillverse.model;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+
 import java.time.LocalDateTime;
 import java.util.Map;
 
@@ -17,13 +18,13 @@ public class ProgressUpdate {
     private String templateText;
     private LocalDateTime progressDate;
 
-    /** user’s free-form notes */
+    /** user’s free-form notes (or generated prompt filled-in) */
     private String updateText;
 
     /**
      * Holds the values for whatever extra fields
-     * TemplateCategory.fields defines for this category.
-     * Key = FieldDefinition.name, Value = user input
+     * the TemplateCategory.fields defines for this category.
+     * Key = fieldDefinition.key, Value = user input
      */
     private Map<String, Object> extraFields;
 
