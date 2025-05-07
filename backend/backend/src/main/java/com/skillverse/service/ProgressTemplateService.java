@@ -1,47 +1,51 @@
+// src/main/java/com/skillverse/service/ProgressTemplateService.java
 package com.skillverse.service;
 
 import com.skillverse.model.ProgressTemplate;
 import com.skillverse.repository.ProgressTemplateRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 
 @Service
 public class ProgressTemplateService {
 
     @Autowired
-    private ProgressTemplateRepository progressTemplateRepository;
+    private ProgressTemplateRepository repository;
 
-    // Get all templates
+    /** List all templates, or only those in a given category */
     public List<ProgressTemplate> getAllTemplates() {
-        return progressTemplateRepository.findAll();
+        return repository.findAll();
     }
 
-    // Get a template by ID
+    public List<ProgressTemplate> getTemplatesByCategoryId(String categoryId) {
+        return repository.findByCategoryId(categoryId);
+    }
+
+    /** Fetch one by its id */
     public ProgressTemplate getTemplateById(String id) {
-        return progressTemplateRepository.findById(id).orElse(null);  // Return null if not found
+        return repository.findById(id).orElse(null);
     }
 
-    // Add a new template
-    public ProgressTemplate addTemplate(String templateText) {
-        ProgressTemplate newTemplate = new ProgressTemplate(templateText);
-        return progressTemplateRepository.save(newTemplate);
+    /** Create a brand-new template */
+    public ProgressTemplate addTemplate(ProgressTemplate template) {
+        return repository.save(template);
     }
 
-    // Update an existing template
-    public ProgressTemplate updateTemplate(String id, String templateText) {
-        ProgressTemplate existingTemplate = progressTemplateRepository.findById(id)
+    /** Update both its categoryId & templateText */
+    public ProgressTemplate updateTemplate(String id, ProgressTemplate updated) {
+        ProgressTemplate existing = repository.findById(id)
             .orElseThrow(() -> new RuntimeException("Template not found"));
-        existingTemplate.setTemplateText(templateText);
-        return progressTemplateRepository.save(existingTemplate);
+        existing.setCategoryId(updated.getCategoryId());
+        existing.setTemplateText(updated.getTemplateText());
+        return repository.save(existing);
     }
 
-    // Delete a template
+    /** Delete */
     public boolean deleteTemplate(String id) {
-        if (progressTemplateRepository.existsById(id)) {
-            progressTemplateRepository.deleteById(id);
-            return true;  // Return true if deletion is successful
-        }
-        return false;  // Return false if template is not found
+        if (!repository.existsById(id)) return false;
+        repository.deleteById(id);
+        return true;
     }
 }

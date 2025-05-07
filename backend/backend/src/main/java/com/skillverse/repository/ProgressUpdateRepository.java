@@ -5,5 +5,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import java.util.List;
 
 public interface ProgressUpdateRepository extends MongoRepository<ProgressUpdate, String> {
-    List<ProgressUpdate> findByUserId(String userId);  // Custom query to find updates by userId
-}
+    List<ProgressUpdate> findByUserId(String userId);
+    List<ProgressUpdate> findByCategoryId(String categoryId);
+    List<ProgressUpdate> findByUserIdAndCategoryId(String userId, String categoryId);
+    }

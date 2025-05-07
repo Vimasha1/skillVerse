@@ -15,6 +15,7 @@ import UserProfilePage from './components/UserProfile';              // User Pro
 import LoginPage from './components/LoginPage';                     // Login Page
 import ProgressUpdatePage from './components/ProgressUpdatePage';   // Progress Update Page
 import UserProfileUpdateForm from './components/UserProfileUpdateForm'; // Profile Edit Form
+import UserProfileRegisterForm from './components/UserRegisterForm';   // User Registration Form
 
 import './App.css';
 
@@ -42,6 +43,7 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/user-profiles/:id" element={<UserProfilePage />} />
             <Route path="/user-profiles/edit/:id" element={<UserProfileUpdateForm />} />
+            <Route path="/user-profiles/register" element={<UserProfileRegisterForm />} />
 
             {/* Progress Updates */}
             <Route path="/progress-update" element={<ProgressUpdatePage />} />
