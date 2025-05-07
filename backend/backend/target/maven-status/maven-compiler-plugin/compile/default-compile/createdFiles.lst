@@ -1,1 +1,15 @@
+com\skillverse\model\Reply.class
+com\skillverse\model\LearningPlan$Resource$Type.class
+com\skillverse\controller\LearningPlanController.class
+com\skillverse\model\Post.class
+com\skillverse\model\LearningPlan$Resource.class
+com\skillverse\model\LearningPlan.class
+com\skillverse\repository\LearningPlanRepository.class
 com\skillverse\BackendApplication.class
+com\skillverse\config\SecurityConfig.class
+com\skillverse\repository\PostRepository.class
+com\skillverse\service\LearningPlanService.class
+com\skillverse\model\Comment.class
+com\skillverse\controller\PostController.class
+com\skillverse\service\PostService.class
+com\skillverse\model\LearningPlan$Milestone.class
