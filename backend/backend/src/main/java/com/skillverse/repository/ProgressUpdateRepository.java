@@ -1,9 +1,13 @@
-package com.skillverse.backend.repository;
+// src/main/java/com/skillverse/repository/ProgressUpdateRepository.java
+package com.skillverse.repository;
 
-import com.skillverse.backend.model.ProgressUpdate;
+import com.skillverse.model.ProgressUpdate;
 import org.springframework.data.mongodb.repository.MongoRepository;
+
 import java.util.List;
 
 public interface ProgressUpdateRepository extends MongoRepository<ProgressUpdate, String> {
-    List<ProgressUpdate> findByUserId(String userId);  // Custom query to find updates by userId
+    List<ProgressUpdate> findByUserId(String userId);
+    List<ProgressUpdate> findByCategoryId(String categoryId);
+    List<ProgressUpdate> findByUserIdAndCategoryId(String userId, String categoryId);
 }

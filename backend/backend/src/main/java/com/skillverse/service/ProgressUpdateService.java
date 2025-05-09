@@ -1,45 +1,63 @@
-package com.skillverse.backend.service;
+// src/main/java/com/skillverse/service/ProgressUpdateService.java
+package com.skillverse.service;
 
-import com.skillverse.backend.model.ProgressUpdate;
-import com.skillverse.backend.repository.ProgressUpdateRepository;
+import com.skillverse.model.ProgressUpdate;
+import com.skillverse.repository.ProgressUpdateRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 public class ProgressUpdateService {
 
     @Autowired
-    private ProgressUpdateRepository progressUpdateRepository;
+    private ProgressUpdateRepository repository;
 
-    // Get all progress updates
-    public List<ProgressUpdate> getAllProgressUpdates() {
-        return progressUpdateRepository.findAll();
+    /**
+     * List updates, optionally filtered
+     * by userId and/or categoryId.
+     */
+    public List<ProgressUpdate> getAll(String userId, String categoryId) {
+        if (userId != null && categoryId != null) {
+            return repository.findByUserIdAndCategoryId(userId, categoryId);
+        }
+        if (userId != null) {
+            return repository.findByUserId(userId);
+        }
+        if (categoryId != null) {
+            return repository.findByCategoryId(categoryId);
+        }
+        return repository.findAll();
     }
 
-    // Create a new progress update
-    public ProgressUpdate createProgressUpdate(ProgressUpdate progressUpdate) {
-        return progressUpdateRepository.save(progressUpdate);
+    /** Fetch one by id */
+    public ProgressUpdate getById(String id) {
+        return repository.findById(id).orElse(null);
     }
 
-    // Update an existing progress update
-    public ProgressUpdate updateProgressUpdate(String id, ProgressUpdate progressUpdate) {
-        ProgressUpdate existing = progressUpdateRepository.findById(id)
+    /** Create new, stamping the date/time server-side */
+    public ProgressUpdate create(ProgressUpdate upd) {
+        upd.setProgressDate(LocalDateTime.now());
+        return repository.save(upd);
+    }
+
+    /** Update text, templateText, and any extraFields */
+    public ProgressUpdate update(String id, ProgressUpdate upd) {
+        ProgressUpdate existing = repository.findById(id)
             .orElseThrow(() -> new RuntimeException("Progress update not found"));
-        existing.setUpdateText(progressUpdate.getUpdateText());
-        existing.setUpdateType(progressUpdate.getUpdateType());
-        existing.setCategory(progressUpdate.getCategory());
-        return progressUpdateRepository.save(existing);
+        existing.setTemplateText(upd.getTemplateText());
+        existing.setUpdateText(upd.getUpdateText());
+        existing.setExtraFields(upd.getExtraFields());
+        // categoryId and progressDate could also be updated if desired
+        return repository.save(existing);
     }
 
-    // Delete a progress update
-    public void deleteProgressUpdate(String id) {
-        progressUpdateRepository.deleteById(id);
-    }
-
-    // Get progress updates by userId
-    public List<ProgressUpdate> getProgressUpdatesByUserId(String userId) {
-        return progressUpdateRepository.findByUserId(userId);
+    /** Delete */
+    public boolean delete(String id) {
+        if (!repository.existsById(id)) return false;
+        repository.deleteById(id);
+        return true;
     }
 }

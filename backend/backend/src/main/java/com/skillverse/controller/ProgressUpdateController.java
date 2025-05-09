@@ -1,7 +1,8 @@
-package com.skillverse.backend.controller;
+// src/main/java/com/skillverse/controller/ProgressUpdateController.java
+package com.skillverse.controller;
 
-import com.skillverse.backend.model.ProgressUpdate;
-import com.skillverse.backend.service.ProgressUpdateService;
+import com.skillverse.model.ProgressUpdate;
+import com.skillverse.service.ProgressUpdateService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -9,44 +10,57 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/progress")
+@RequestMapping("/api/progress-updates")
+@CrossOrigin(origins = "http://localhost:3000")
 public class ProgressUpdateController {
 
     @Autowired
-    private ProgressUpdateService progressUpdateService;
+    private ProgressUpdateService service;
 
-    // Get all progress updates
+    /**
+     * GET /api/progress-updates
+     * Optional filters:
+     *   ?userId=… or ?categoryId=…
+     */
     @GetMapping
-    public ResponseEntity<List<ProgressUpdate>> getAllProgressUpdates() {
-        List<ProgressUpdate> progressUpdates = progressUpdateService.getAllProgressUpdates();
-        return ResponseEntity.ok(progressUpdates);
+    public ResponseEntity<List<ProgressUpdate>> list(
+            @RequestParam(required = false) String userId,
+            @RequestParam(required = false) String categoryId) {
+        return ResponseEntity.ok(service.getAll(userId, categoryId));
     }
 
-    // Get progress updates by userId
-    @GetMapping("/{userId}")
-    public ResponseEntity<List<ProgressUpdate>> getProgressUpdatesByUserId(@PathVariable String userId) {
-        List<ProgressUpdate> progressUpdates = progressUpdateService.getProgressUpdatesByUserId(userId);
-        return ResponseEntity.ok(progressUpdates);
+    /** GET /api/progress-updates/{id} */
+    @GetMapping("/{id}")
+    public ResponseEntity<ProgressUpdate> getById(@PathVariable String id) {
+        ProgressUpdate upd = service.getById(id);
+        return (upd == null)
+            ? ResponseEntity.notFound().build()
+            : ResponseEntity.ok(upd);
     }
 
-    // Create a new progress update
-    @PostMapping("/create")
-    public ResponseEntity<ProgressUpdate> createProgressUpdate(@RequestBody ProgressUpdate progressUpdate) {
-        ProgressUpdate createdProgressUpdate = progressUpdateService.createProgressUpdate(progressUpdate);
-        return ResponseEntity.status(201).body(createdProgressUpdate);
+    /** POST /api/progress-updates */
+    @PostMapping
+    public ResponseEntity<ProgressUpdate> create(@RequestBody ProgressUpdate payload) {
+        ProgressUpdate created = service.create(payload);
+        return ResponseEntity.status(201).body(created);
     }
 
-    // Update an existing progress update
-    @PutMapping("/update/{id}")
-    public ResponseEntity<ProgressUpdate> updateProgressUpdate(@PathVariable String id, @RequestBody ProgressUpdate progressUpdate) {
-        ProgressUpdate updatedProgressUpdate = progressUpdateService.updateProgressUpdate(id, progressUpdate);
-        return ResponseEntity.ok(updatedProgressUpdate);
+    /** PUT /api/progress-updates/{id} */
+    @PutMapping("/{id}")
+    public ResponseEntity<ProgressUpdate> update(
+            @PathVariable String id,
+            @RequestBody ProgressUpdate payload) {
+        ProgressUpdate updated = service.update(id, payload);
+        return (updated == null)
+            ? ResponseEntity.notFound().build()
+            : ResponseEntity.ok(updated);
     }
 
-    // Delete a progress update
-    @DeleteMapping("/delete/{id}")
-    public ResponseEntity<Void> deleteProgressUpdate(@PathVariable String id) {
-        progressUpdateService.deleteProgressUpdate(id);
-        return ResponseEntity.noContent().build();
+    /** DELETE /api/progress-updates/{id} */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable String id) {
+        return service.delete(id)
+            ? ResponseEntity.noContent().build()
+            : ResponseEntity.notFound().build();
     }
 }

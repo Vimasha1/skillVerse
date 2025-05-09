@@ -1,8 +1,11 @@
-package com.skillverse.backend.model;
+// src/main/java/com/skillverse/model/ProgressUpdate.java
+package com.skillverse.model;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+
 import java.time.LocalDateTime;
+import java.util.Map;
 
 @Document(collection = "progress_updates")
 public class ProgressUpdate {
@@ -11,78 +14,53 @@ public class ProgressUpdate {
     private String id;
 
     private String userId;
-    private String updateText; // The text of the progress update (either template or custom)
+    private String categoryId;
+    private String templateText;
     private LocalDateTime progressDate;
-    private String updateType; // E.g., "Skill Progress"
-    private String category; // E.g., "Development", "Learning", etc.
-    private String templateId; // If using a template, store the template ID
 
-    // Constructors
+    /** user’s free-form notes (or generated prompt filled-in) */
+    private String updateText;
+
+    /**
+     * Holds the values for whatever extra fields
+     * the TemplateCategory.fields defines for this category.
+     * Key = fieldDefinition.key, Value = user input
+     */
+    private Map<String, Object> extraFields;
+
     public ProgressUpdate() {}
 
-    public ProgressUpdate(String userId, String updateText, String updateType, String category, String templateId) {
-        this.userId = userId;
-        this.updateText = updateText;
-        this.progressDate = LocalDateTime.now();
-        this.updateType = updateType;
-        this.category = category;
-        this.templateId = templateId;
-    }
-
-    // Getters and Setters
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getUserId() {
-        return userId;
-    }
-
-    public void setUserId(String userId) {
-        this.userId = userId;
-    }
-
-    public String getUpdateText() {
-        return updateText;
-    }
-
-    public void setUpdateText(String updateText) {
-        this.updateText = updateText;
-    }
-
-    public LocalDateTime getProgressDate() {
-        return progressDate;
-    }
-
-    public void setProgressDate(LocalDateTime progressDate) {
+    public ProgressUpdate(String userId,
+                          String categoryId,
+                          String templateText,
+                          LocalDateTime progressDate,
+                          String updateText,
+                          Map<String, Object> extraFields) {
+        this.userId       = userId;
+        this.categoryId   = categoryId;
+        this.templateText = templateText;
         this.progressDate = progressDate;
+        this.updateText   = updateText;
+        this.extraFields  = extraFields;
     }
 
-    public String getUpdateType() {
-        return updateType;
-    }
+    public String getId() { return id; }
 
-    public void setUpdateType(String updateType) {
-        this.updateType = updateType;
-    }
+    public String getUserId() { return userId; }
+    public void setUserId(String userId) { this.userId = userId; }
 
-    public String getCategory() {
-        return category;
-    }
+    public String getCategoryId() { return categoryId; }
+    public void setCategoryId(String categoryId) { this.categoryId = categoryId; }
 
-    public void setCategory(String category) {
-        this.category = category;
-    }
+    public String getTemplateText() { return templateText; }
+    public void setTemplateText(String templateText) { this.templateText = templateText; }
 
-    public String getTemplateId() {
-        return templateId;
-    }
+    public LocalDateTime getProgressDate() { return progressDate; }
+    public void setProgressDate(LocalDateTime progressDate) { this.progressDate = progressDate; }
 
-    public void setTemplateId(String templateId) {
-        this.templateId = templateId;
-    }
+    public String getUpdateText() { return updateText; }
+    public void setUpdateText(String updateText) { this.updateText = updateText; }
+
+    public Map<String, Object> getExtraFields() { return extraFields; }
+    public void setExtraFields(Map<String, Object> extraFields) { this.extraFields = extraFields; }
 }

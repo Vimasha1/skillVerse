@@ -1,7 +1,8 @@
-package com.skillverse.backend.controller;
+// src/main/java/com/skillverse/controller/ProgressTemplateController.java
+package com.skillverse.controller;
 
-import com.skillverse.backend.model.ProgressTemplate;
-import com.skillverse.backend.service.ProgressTemplateService;
+import com.skillverse.model.ProgressTemplate;
+import com.skillverse.service.ProgressTemplateService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,53 +11,59 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/templates")
+@RequestMapping("/api/progress-templates")
+@CrossOrigin(origins = "http://localhost:3000")
 public class ProgressTemplateController {
 
     @Autowired
-    private ProgressTemplateService progressTemplateService;
+    private ProgressTemplateService service;
 
-    // Get all available templates
+    /** 
+     * GET /api/progress-templates
+     * Optionally filter by ?categoryId=…
+     */
     @GetMapping
-    public ResponseEntity<List<ProgressTemplate>> getTemplates() {
-        List<ProgressTemplate> templates = progressTemplateService.getAllTemplates();
-        return ResponseEntity.ok(templates);
+    public ResponseEntity<List<ProgressTemplate>> getAll(
+            @RequestParam(required = false) String categoryId) {
+        List<ProgressTemplate> list = (categoryId == null)
+            ? service.getAllTemplates()
+            : service.getTemplatesByCategoryId(categoryId);
+        return ResponseEntity.ok(list);
     }
 
-    // Get a single template by ID
+    /** GET /api/progress-templates/{id} */
     @GetMapping("/{id}")
-    public ResponseEntity<ProgressTemplate> getTemplateById(@PathVariable String id) {
-        ProgressTemplate template = progressTemplateService.getTemplateById(id);
-        if (template == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null); // Return 404 if not found
-        }
-        return ResponseEntity.ok(template); // Return 200 OK with template
+    public ResponseEntity<ProgressTemplate> getById(@PathVariable String id) {
+        ProgressTemplate tpl = service.getTemplateById(id);
+        return (tpl == null)
+            ? ResponseEntity.notFound().build()
+            : ResponseEntity.ok(tpl);
     }
 
-    // Add a new template
-    @PostMapping("/add")
-    public ResponseEntity<ProgressTemplate> addTemplate(@RequestBody String templateText) {
-        ProgressTemplate newTemplate = progressTemplateService.addTemplate(templateText);
-        return ResponseEntity.status(HttpStatus.CREATED).body(newTemplate);
+    /** POST /api/progress-templates */
+    @PostMapping
+    public ResponseEntity<ProgressTemplate> create(@RequestBody ProgressTemplate template) {
+        ProgressTemplate created = service.addTemplate(template);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
-    // Update an existing template by ID
-    @PutMapping("/update/{id}")
-    public ResponseEntity<ProgressTemplate> updateTemplate(@PathVariable String id, @RequestBody String templateText) {
-        ProgressTemplate updatedTemplate = progressTemplateService.updateTemplate(id, templateText);
-        if (updatedTemplate == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null); // Return 404 if template not found
-        }
-        return ResponseEntity.ok(updatedTemplate); // Return 200 OK with the updated template
+    /** PUT /api/progress-templates/{id} */
+    @PutMapping("/{id}")
+    public ResponseEntity<ProgressTemplate> update(
+            @PathVariable String id,
+            @RequestBody ProgressTemplate template) {
+        ProgressTemplate updated = service.updateTemplate(id, template);
+        return (updated == null)
+            ? ResponseEntity.notFound().build()
+            : ResponseEntity.ok(updated);
     }
 
-    // Delete a template by ID
-    @DeleteMapping("/delete/{id}")
-    public ResponseEntity<Void> deleteTemplate(@PathVariable String id) {
-        boolean deleted = progressTemplateService.deleteTemplate(id);
-        if (!deleted) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // Return 404 if template not found
-        }
-        return ResponseEntity.noContent().build(); // Return 204 No Content if deleted successfully
+    /** DELETE /api/progress-templates/{id} */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable String id) {
+        boolean ok = service.deleteTemplate(id);
+        return ok
+            ? ResponseEntity.noContent().build()
+            : ResponseEntity.notFound().build();
     }
 }
