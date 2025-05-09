@@ -1,3 +1,5 @@
+// src/App.jsx
+
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
@@ -8,6 +10,16 @@ import CreatePostForm from './components/CreatePostForm';
 import LearningPlanList from './components/LearningPlanList';
 import CreateLearningPlanForm from './components/CreateLearningPlanForm';
 import PlanDetailPage from './components/PlanDetailPage';
+
+import UserProfilePage from './components/UserProfile';              // User Profile Page
+import LoginPage from './components/LoginPage';                     // Login Page
+import ProgressUpdatePage from './components/ProgressUpdatePage';   // Progress Update Page
+import UserProfileUpdateForm from './components/UserProfileUpdateForm'; // Profile Edit Form
+import UserProfileRegisterForm from './components/UserRegisterForm';   // User Registration Form
+import EditProgressUpdateForm from './components/EditProgressUpdateForm';
+import AllProgessUpdates from './components/AllProgressUpdates'; // All Progress Updates
+import './index.css'; // Tailwind CSS styles
+
 
 import './App.css';
 
@@ -30,6 +42,17 @@ function App() {
               path="/plans/:id/edit"
               element={<CreateLearningPlanForm editMode />}
             />
+
+            {/* User Profile & Authentication */}
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/user-profiles/:id" element={<UserProfilePage />} />
+            <Route path="/user-profiles/edit/:id" element={<UserProfileUpdateForm />} />
+            <Route path="/user-profiles/register" element={<UserProfileRegisterForm />} />
+
+            {/* Progress Updates */}
+            <Route path="/progress-update" element={<ProgressUpdatePage />} />
+            <Route path="/progress-update/edit/:id" element={<EditProgressUpdateForm />} />
+            <Route path="/all-progress-updates" element={<AllProgessUpdates />} />
           </Routes>
         </div>
       </div>
