@@ -5,116 +5,77 @@ import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 
 const EditProgressUpdateForm = () => {
-  const { id } = useParams();               // the progress update ID
+  const { id } = useParams(); // progress update ID
   const navigate = useNavigate();
 
-  // load userId from session (set at login)
   const stored = sessionStorage.getItem('userProfile');
   const userProfile = stored ? JSON.parse(stored) : null;
   const userId = userProfile?.id;
 
-  // state
-  const [templates, setTemplates] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [selectedTemplateId, setSelectedTemplateId] = useState('');
-  const [customUpdate, setCustomUpdate] = useState('');
-  const [updateType, setUpdateType] = useState('');
+  const [update, setUpdate] = useState(null);
+  const [template, setTemplate] = useState(null);
   const [fieldValues, setFieldValues] = useState({});
+  const [freeText, setFreeText] = useState('');
+  const [progressDate, setProgressDate] = useState('');
   const [message, setMessage] = useState('');
 
-  // for beautifying the template picker cards
-  const updateTypes = [
-    { value: 'Achievement', label: '🎉 Achievement' },
-    { value: 'Goal',        label: '🎯 Goal' },
-    { value: 'Milestone',   label: '🏆 Milestone' },
-  ];
-
-  // 1) on mount, load templates, categories, and the existing update
   useEffect(() => {
     if (!userId) {
       navigate('/login');
       return;
     }
 
-    // fetch categories (with their fields metadata)
-    axios.get('http://localhost:8081/api/template-categories')
-      .then(res => setCategories(res.data))
-      .catch(() => setMessage('Failed to load categories.'));
-
-    // fetch templates
-    axios.get('http://localhost:8081/api/progress-templates')
-      .then(res => setTemplates(res.data))
-      .catch(() => setMessage('Failed to load templates.'));
-
-    // fetch the existing progress-update
+    // Load update
     axios.get(`http://localhost:8081/api/progress-updates/${id}`)
       .then(res => {
         const upd = res.data;
-        setSelectedTemplateId(upd.categoryId
-          ? templates.find(t => t.categoryId === upd.categoryId)?.id || ''
-          : '');
-        setCustomUpdate(upd.updateText || '');
-        setUpdateType(upd.updateType || '');
+        setUpdate(upd);
         setFieldValues(upd.extraFields || {});
+        setFreeText(upd.freeText || '');
+        setProgressDate(upd.progressDate?.substring(0, 10) || '');
+        if (upd.templateId) {
+          axios.get(`http://localhost:8081/api/progress-templates/${upd.templateId}`)
+            .then(res => setTemplate(res.data))
+            .catch(() => setMessage('Failed to load template'));
+        }
       })
-      .catch(() => setMessage('Failed to load update.'));
-  // we intentionally do NOT include `templates` in deps, so we only pick
-  // the templateId -> categoryId once, after all have loaded.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, userId, navigate]);
+      .catch(() => setMessage('Failed to load progress update.'));
+  }, [id, navigate, userId]);
 
-  // helper to look up the category
-  const selectedTemplate = templates.find(t => t.id === selectedTemplateId);
-  const category = categories.find(c => c.id === selectedTemplate?.categoryId);
-
-  const handleTemplateSelect = tplId => {
-    setSelectedTemplateId(tplId);
-    setCustomUpdate('');
-    setFieldValues({});
-  };
-
-  const handleFieldChange = (name, val) => {
-    setFieldValues(prev => ({ ...prev, [name]: val }));
+  const handleFieldChange = (key, value) => {
+    setFieldValues(prev => ({ ...prev, [key]: value }));
   };
 
   const handleSubmit = async e => {
     e.preventDefault();
 
-    // decide what the “prompt” should be
-    const template = templates.find(t => t.id === selectedTemplateId);
-    const updateText = template
-      ? template.templateText
-      : customUpdate.trim();
-
-    if (!updateText) return setMessage('Please pick a template or write your own.');
-    if (!updateType)  return setMessage('Please select an update type.');
-
     const payload = {
       userId,
-      categoryId: template?.categoryId,
-      templateText: template?.templateText,
-      updateText,
-      updateType,
-      extraFields: fieldValues,
+      templateId: update?.templateId || null,
+      category: update?.category,
+      progressDate: progressDate + 'T00:00:00',
+      templateText: update?.templateText || null,
+      freeText: template ? null : freeText,
+      extraFields: template ? fieldValues : {},
     };
 
     try {
-      await axios.put(
-        `http://localhost:8081/api/progress-updates/${id}`,
-        payload
-      );
-      setMessage('Update saved! Redirecting…');
+      await axios.put(`http://localhost:8081/api/progress-updates/update/${id}`, payload);
+      setMessage('Progress update updated!');
       setTimeout(() => navigate(`/user-profiles/${userId}`), 1500);
     } catch {
-      setMessage('Error saving update—please try again.');
+      setMessage('Error updating progress update.');
     }
   };
+
+  if (!update) return null;
 
   return (
     <div className="max-w-3xl mx-auto p-8 bg-white rounded-xl shadow-lg mt-12">
       <h1 className="text-2xl font-bold text-center text-indigo-600 mb-6">
         Edit Progress Update
       </h1>
+
       {message && (
         <div className="mb-4 p-3 text-center text-sm font-medium text-white bg-red-500 rounded">
           {message}
@@ -122,92 +83,83 @@ const EditProgressUpdateForm = () => {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Template picker as cards */}
+
+        {/* Display category (non-editable) */}
         <div>
-          <label className="block text-gray-700 font-medium mb-2">
-            Pick a Template
-          </label>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {templates.map(tpl => {
-              const cat = categories.find(c => c.id === tpl.categoryId) || {};
-              const isSel = tpl.id === selectedTemplateId;
-              return (
-                <div
-                  key={tpl.id}
-                  onClick={() => handleTemplateSelect(tpl.id)}
-                  className={`
-                    p-4 border rounded-lg cursor-pointer hover:shadow-lg transition
-                    ${isSel ? 'border-indigo-600 bg-indigo-50' : 'border-gray-200 bg-white'}
-                  `}
-                >
-                  <div className="flex items-center mb-2">
-                    <span className="text-2xl mr-2">{cat.icon}</span>
-                    <h4 className="font-semibold">{cat.name}</h4>
-                  </div>
-                  <p className="text-gray-700 text-sm">{tpl.templateText}</p>
-                </div>
-              );
-            })}
-          </div>
+          <label className="block text-gray-700 font-medium mb-2">Update Category</label>
+          <input
+            value={update.category}
+            disabled
+            className="w-full p-3 bg-gray-100 border border-gray-300 rounded text-gray-600"
+          />
         </div>
 
-        {/* Dynamic category fields */}
-        {category && (
+        {/* Display template text if using a template */}
+        {template && (
+          <div>
+            <label className="block text-gray-700 font-medium mb-2">Template Used</label>
+            <textarea
+              value={template.templateText}
+              readOnly
+              className="w-full p-3 bg-gray-100 border border-gray-300 rounded text-gray-600"
+              rows={3}
+            />
+          </div>
+        )}
+
+        {/* Dynamic fields if template is used */}
+        {template && (
           <div className="space-y-4">
-            <h3 className="text-xl font-semibold text-gray-700">
-              {category.icon} {category.name} Details
+            <h3 className="text-lg font-semibold text-gray-700">
+              Fill Template Fields
             </h3>
-            {category.fields.map(f => (
-              <div key={f.key}>
-                <label className="block text-gray-700 mb-1">{f.label}</label>
+            {template.fields.map(field => (
+              <div key={field.name}>
+                <label className="block text-gray-700 mb-1">{field.label}</label>
                 <input
-                  type={f.type || 'text'}
-                  value={fieldValues[f.key] || ''}
-                  onChange={e => handleFieldChange(f.key, e.target.value)}
+                  type={field.type || 'text'}
+                  value={fieldValues[field.name] || ''}
+                  onChange={e => handleFieldChange(field.name, e.target.value)}
                   className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                  placeholder={f.placeholder}
-                  required={f.required}
+                  placeholder={field.placeholder || ''}
+                  required
                 />
               </div>
             ))}
           </div>
         )}
 
-        {/* free-form textarea if no template chosen */}
-        {!selectedTemplate && (
+        {/* Free-text area if no template */}
+        {!template && (
           <div>
             <label className="block text-gray-700 font-medium mb-2">
-              Or write your own progress…
+              Update Description
             </label>
             <textarea
+              value={freeText}
+              onChange={e => setFreeText(e.target.value)}
               rows={4}
               className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-400"
-              value={customUpdate}
-              onChange={e => setCustomUpdate(e.target.value)}
+              required
             />
           </div>
         )}
 
-        {/* Update type dropdown */}
+        {/* Date field */}
         <div>
           <label className="block text-gray-700 font-medium mb-2">
-            Update Type
+            Progress Date
           </label>
-          <select
-            value={updateType}
-            onChange={e => setUpdateType(e.target.value)}
+          <input
+            type="date"
+            value={progressDate}
+            onChange={e => setProgressDate(e.target.value)}
             className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-400"
             required
-          >
-            <option value="">— select type —</option>
-            {updateTypes.map(t => (
-              <option key={t.value} value={t.value}>
-                {t.label}
-              </option>
-            ))}
-          </select>
+          />
         </div>
 
+        {/* Submit button */}
         <button
           type="submit"
           className="w-full py-3 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition"
