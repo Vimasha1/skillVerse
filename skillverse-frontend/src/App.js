@@ -20,6 +20,7 @@ import EditProgressUpdateForm from './components/EditProgressUpdateForm';
 import AllProgessUpdates from './components/AllProgressUpdates'; // All Progress Updates
 import ProgressUpdateFeed from './components/ProgressUpdateFeed'; // All Progress Updates
 import PublicUserProfile from './components/PublicUserProfile'; // Public User Profile
+import ResumeGenerator from './components/ResumeGenerator';
 
 import AdminDashboard from './admin/AdminDashboard';
 import AdminPosts from './admin/AdminPosts';
@@ -56,6 +57,7 @@ function App() {
             <Route path="/user-profiles/edit/:id" element={<UserProfileUpdateForm />} />
             <Route path="/user-profiles/register" element={<UserProfileRegisterForm />} />
             <Route path="/public-profile/:id" element={<PublicUserProfile />} />
+            <Route path="/resume" element={<ResumeGenerator />} />
 
             {/* Progress Updates */}
             <Route path="/progress-update" element={<ProgressUpdatePage />} />
