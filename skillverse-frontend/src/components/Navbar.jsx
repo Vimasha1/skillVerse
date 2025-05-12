@@ -28,6 +28,9 @@ export default function Navbar() {
         <Link to="/plans" className="hover:text-green-400">
           Learning Plans
         </Link>
+        <Link to="/progress-feed" className="hover:text-green-400">
+          Progress Updates
+        </Link>
       </div>
 
       {/* RIGHT: Auth / Profile */}
