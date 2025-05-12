@@ -1,8 +1,9 @@
-// src/components/UserProfile.jsx
+// src/components/UserProfilePage.jsx
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
+import PostCard from './PostCard';
 
 const UserProfilePage = () => {
   const navigate = useNavigate();
@@ -10,6 +11,7 @@ const UserProfilePage = () => {
 
   const [userProfile, setUserProfile] = useState(null);
   const [progressUpdates, setProgressUpdates] = useState([]);
+  const [userPosts, setUserPosts] = useState([]);
   const [message, setMessage] = useState('');
 
   useEffect(() => {
@@ -17,8 +19,13 @@ const UserProfilePage = () => {
 
     axios
       .get(`http://localhost:8081/api/user-profiles/${userId}`)
-      .then(res => setUserProfile(res.data))
-      .catch(() => setMessage('Error loading profile.'));
+      .then(res => {
+        setUserProfile(res.data);
+        // Fetch posts using the `username` field
+        return axios.get(`http://localhost:8081/api/posts/user/${res.data.username}`);
+      })
+      .then(postRes => setUserPosts(postRes.data))
+      .catch(() => setMessage('Error loading profile or posts.'));
 
     axios
       .get(`http://localhost:8081/api/progress-updates?userId=${userId}`)
@@ -63,8 +70,6 @@ const UserProfilePage = () => {
       {/* PROFILE HEADER */}
       <div className="bg-white shadow mb-8">
         <div className="max-w-screen-xl mx-auto flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-0 md:space-x-8 p-8">
-          
-          {/* Picture */}
           <div className="relative">
             <img
               src={userProfile.profilePicture || 'https://via.placeholder.com/150'}
@@ -86,7 +91,6 @@ const UserProfilePage = () => {
             />
           </div>
 
-          {/* Name & Contacts */}
           <div className="flex-1">
             <h1 className="text-3xl font-bold text-gray-900">
               {userProfile.firstName} {userProfile.lastName}
@@ -109,7 +113,6 @@ const UserProfilePage = () => {
             </div>
           </div>
 
-          {/* Actions */}
           <div className="flex space-x-3">
             <button
               onClick={handleGoToEdit}
@@ -131,9 +134,7 @@ const UserProfilePage = () => {
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         {/* INDIVIDUAL INFO */}
         <section className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold text-gray-700 mb-4">
-            Individual Information
-          </h2>
+          <h2 className="text-xl font-semibold text-gray-700 mb-4">Individual Information</h2>
           <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
             <div>
               <dt className="font-medium text-gray-600">Username</dt>
@@ -156,31 +157,25 @@ const UserProfilePage = () => {
 
         {/* PROGRESS UPDATES */}
         <section className="bg-white rounded-lg shadow p-6">
-          
           <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-gray-700">Progress Updates</h2>
-          <div className="flex space-x-2">
-            {/* Add New Update */}
-            <button
-             onClick={handleGoToAddProgress}
-             className="px-3 py-1 bg-green-500 text-white rounded-lg hover:bg-green-600 transition"
-            >
-              + Add update
-            </button>
-
-            {/* All Updates & Analytics */}
-            <button
-              onClick={() => navigate('/all-progress-updates')}
-              className="px-3 py-1 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
-            >
-              All updates & analytics
-            </button>
+            <h2 className="text-xl font-semibold text-gray-700">Progress Updates</h2>
+            <div className="flex space-x-2">
+              <button
+                onClick={handleGoToAddProgress}
+                className="px-3 py-1 bg-green-500 text-white rounded-lg hover:bg-green-600 transition"
+              >
+                + Add update
+              </button>
+              <button
+                onClick={() => navigate('/all-progress-updates')}
+                className="px-3 py-1 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+              >
+                All updates & analytics
+              </button>
+            </div>
           </div>
-        </div>
 
-          {message && (
-            <p className="mb-4 text-center text-red-600">{message}</p>
-          )}
+          {message && <p className="mb-4 text-center text-red-600">{message}</p>}
 
           {progressUpdates.length === 0 ? (
             <p className="text-gray-600">No updates yet.</p>
@@ -222,6 +217,19 @@ const UserProfilePage = () => {
           )}
         </section>
 
+        {/* USER POSTS */}
+        <section className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-xl font-semibold text-gray-700 mb-4">Shared Posts</h2>
+          {userPosts.length === 0 ? (
+            <p className="text-gray-600">No posts shared yet.</p>
+          ) : (
+            <div className="space-y-4">
+              {userPosts.map(post => (
+                <PostCard key={post.id} post={post} />
+              ))}
+            </div>
+          )}
+        </section>
       </div>
     </div>
   );
