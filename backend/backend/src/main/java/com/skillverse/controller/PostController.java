@@ -105,4 +105,11 @@ public Post getPostById(@PathVariable String id) {
     public Post replaceComments(@PathVariable String postId, @RequestBody List<Comment> comments) {
         return postService.replaceComments(postId, comments);
     }
+
+@GetMapping("/user/{userId}")
+public List<Post> getPostsByUser(@PathVariable String userId) {
+    return postService.getPostsByUserId(userId);
+}
+
+
 }
