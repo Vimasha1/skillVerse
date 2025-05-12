@@ -76,5 +76,12 @@ public class UserProfileController {
         return ResponseEntity.ok(userProfileService.unfollow(userId, targetId));
     }
 
+    // GET /api/user-profiles/by-username/{username}
+    @GetMapping("/by-username/{username}")
+    public ResponseEntity<UserProfile> getByUsername(@PathVariable String username) {
+        UserProfile profile = userProfileService.getByUsername(username);
+        if (profile == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(profile);
+    }   
 
 }
