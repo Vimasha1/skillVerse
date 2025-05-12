@@ -18,6 +18,8 @@ import UserProfileUpdateForm from './components/UserProfileUpdateForm'; // Profi
 import UserProfileRegisterForm from './components/UserRegisterForm';   // User Registration Form
 import EditProgressUpdateForm from './components/EditProgressUpdateForm';
 import AllProgessUpdates from './components/AllProgressUpdates'; // All Progress Updates
+import ProgressUpdateFeed from './components/ProgressUpdateFeed'; // All Progress Updates
+
 import './index.css'; // Tailwind CSS styles
 
 
@@ -53,6 +55,9 @@ function App() {
             <Route path="/progress-update" element={<ProgressUpdatePage />} />
             <Route path="/progress-update/edit/:id" element={<EditProgressUpdateForm />} />
             <Route path="/all-progress-updates" element={<AllProgessUpdates />} />
+            <Route path="/progress-feed" element={<ProgressUpdateFeed />} />
+
+
           </Routes>
         </div>
       </div>
