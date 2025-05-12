@@ -7,6 +7,7 @@ import {
   TrashIcon,
 } from '@heroicons/react/24/outline';
 import { toast } from 'react-toastify';
+import { Link } from 'react-router-dom';
 
 function PostCard({ post, onUpdate }) {
   const user = JSON.parse(sessionStorage.getItem('userProfile'));
@@ -53,7 +54,7 @@ function PostCard({ post, onUpdate }) {
         onUpdate?.();
       })
       .catch(() => {
-        setLikes(likes); // rollback
+        setLikes(likes);
         setError('Could not update like. Please try again.');
       });
   }, [BASE_URL, post.id, likes, userId, user, onUpdate]);
@@ -155,7 +156,10 @@ function PostCard({ post, onUpdate }) {
       <div className="mb-3">
         <h2 className="text-xl font-semibold">{post.skillName}</h2>
         <p className="text-sm text-gray-500">
-          Posted by <span className="font-medium">{post.userId}</span>
+          Posted by{' '}
+          <Link to={`/public-profile/${post.userId}`} className="text-blue-600 hover:underline">
+            {post.userId}
+          </Link>
         </p>
       </div>
 
@@ -207,7 +211,11 @@ function PostCard({ post, onUpdate }) {
           {/* list of comments */}
           {commentList.map(c => (
             <div key={c.id} className="border-t pt-2 mt-2 text-sm text-gray-800">
-              <strong>{c.userId}:</strong> {c.text}
+              <strong>
+                <Link to={`/public-profile/${c.userId}`} className="text-blue-600 hover:underline">
+                  {c.userId}
+                </Link>:
+              </strong> {c.text}
               {c.userId === userId && (
                 <div className="space-x-2 text-xs mt-1 text-blue-600">
                   <button onClick={() => { setComment(c.text); setEditingComment(c.id); }}>
@@ -224,7 +232,11 @@ function PostCard({ post, onUpdate }) {
                 {c.replies?.map(r => (
                   <div key={r.id} className="mb-1 text-sm">
                     <ArrowUturnLeftIcon className="inline w-4 h-4 mr-1" />
-                    <strong>{r.userId}:</strong> {r.text}
+                    <strong>
+                      <Link to={`/public-profile/${r.userId}`} className="text-blue-600 hover:underline">
+                        {r.userId}
+                      </Link>:
+                    </strong> {r.text}
                     {r.userId === userId && (
                       <span className="inline ml-2 text-xs text-blue-600 space-x-2">
                         <button onClick={() => {
