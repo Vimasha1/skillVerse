@@ -86,4 +86,8 @@ public class UserProfileService {
         return userProfileRepository.save(me);
     }
 
+    public UserProfile getByUsername(String username) {
+        return userProfileRepository.findByUsername(username).orElse(null);
+    }
+
 }
