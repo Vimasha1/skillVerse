@@ -204,7 +204,10 @@ public class PostService {
         return postRepository.save(post);
     }
         
-    
+    public List<Post> getPostsByUserId(String userId) {
+    return postRepository.findByUserId(userId);
+}
+
 
     
 }
