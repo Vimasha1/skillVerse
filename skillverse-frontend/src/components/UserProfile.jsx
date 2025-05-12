@@ -1,5 +1,3 @@
-// src/components/UserProfilePage.jsx
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
@@ -22,7 +20,6 @@ const UserProfilePage = () => {
       .get(`http://localhost:8081/api/user-profiles/${userId}`)
       .then(res => {
         setUserProfile(res.data);
-        // Fetch posts using the `username` field
         return axios.get(`http://localhost:8081/api/posts/user/${res.data.username}`);
       })
       .then(postRes => setUserPosts(postRes.data))
@@ -33,17 +30,6 @@ const UserProfilePage = () => {
       .then(res => setProgressUpdates(res.data))
       .catch(() => setMessage('Error loading updates.'));
   }, [userId, navigate]);
-
-  const getDisplayDate = update => new Date(update.progressDate);
-
-  const renderTemplate = (templateText, extraFields = {}) => {
-    let result = templateText;
-    Object.entries(extraFields).forEach(([key, value]) => {
-      const regex = new RegExp(`%${key}%`, 'g');
-      result = result.replace(regex, value);
-    });
-    return result;
-  };
 
   const handlePictureChange = async e => {
     const file = e.target.files[0];
@@ -79,6 +65,17 @@ const UserProfilePage = () => {
     setExpandedCards(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
+  const getDisplayDate = update => new Date(update.progressDate);
+
+  const renderTemplate = (templateText, extraFields = {}) => {
+    let result = templateText;
+    Object.entries(extraFields).forEach(([key, value]) => {
+      const regex = new RegExp(`%${key}%`, 'g');
+      result = result.replace(regex, value);
+    });
+    return result;
+  };
+
   if (!userProfile) return null;
 
   const sortedUpdates = [...progressUpdates].sort((a, b) =>
@@ -90,8 +87,6 @@ const UserProfilePage = () => {
       {/* PROFILE HEADER */}
       <div className="bg-white shadow mb-8">
         <div className="max-w-screen-xl mx-auto flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-0 md:space-x-8 p-8">
-          
-          {/* Picture */}
           <div className="relative">
             <img
               src={userProfile.profilePicture || 'https://via.placeholder.com/150'}
@@ -142,7 +137,6 @@ const UserProfilePage = () => {
             >
               Edit Profile
             </button>
-            
           </div>
         </div>
       </div>
@@ -201,11 +195,9 @@ const UserProfilePage = () => {
             <div className="overflow-x-auto">
               <div className="inline-flex space-x-4 pb-2 scrollbar-thin scrollbar-thumb-gray-400">
                 {sortedUpdates.map(update => {
-                  const date = getDisplayDate(update).toLocaleDateString();
-                  const rawText = update.templateText || update.freeText || "";
                   const text = update.templateText
                     ? renderTemplate(update.templateText, update.extraFields)
-                    : update.freeText || "";
+                    : update.freeText || '';
                   const isExpanded = expandedCards[update.id];
                   const limit = 100;
                   const displayedText = !isExpanded && text.length > limit
@@ -235,7 +227,9 @@ const UserProfilePage = () => {
                         </p>
                       ))}
 
-                      <p className="mt-2 text-xs text-gray-500">{date}</p>
+                      <p className="mt-2 text-xs text-gray-500">
+                        {new Date(update.progressDate).toLocaleDateString()}
+                      </p>
 
                       <div className="mt-4 flex space-x-2">
                         <button
@@ -255,6 +249,20 @@ const UserProfilePage = () => {
                   );
                 })}
               </div>
+            </div>
+          )}
+        </section>
+
+        {/* SHARED POSTS SECTION */}
+        <section className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-xl font-semibold text-gray-700 mb-4">Shared Posts</h2>
+          {userPosts.length === 0 ? (
+            <p className="text-gray-600">No posts shared yet.</p>
+          ) : (
+            <div className="space-y-6">
+              {userPosts.map(post => (
+                <PostCard key={post.id} post={post} />
+              ))}
             </div>
           )}
         </section>
