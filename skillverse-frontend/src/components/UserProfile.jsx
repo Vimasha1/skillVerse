@@ -13,6 +13,7 @@ const UserProfilePage = () => {
   const [progressUpdates, setProgressUpdates] = useState([]);
   const [userPosts, setUserPosts] = useState([]);
   const [message, setMessage] = useState('');
+  const [expandedCards, setExpandedCards] = useState({});
 
   useEffect(() => {
     if (!userId) return navigate('/login');
@@ -28,10 +29,21 @@ const UserProfilePage = () => {
       .catch(() => setMessage('Error loading profile or posts.'));
 
     axios
-      .get(`http://localhost:8081/api/progress-updates?userId=${userId}`)
+      .get(`http://localhost:8081/api/progress-updates/user/${userId}`)
       .then(res => setProgressUpdates(res.data))
       .catch(() => setMessage('Error loading updates.'));
   }, [userId, navigate]);
+
+  const getDisplayDate = update => new Date(update.progressDate);
+
+  const renderTemplate = (templateText, extraFields = {}) => {
+    let result = templateText;
+    Object.entries(extraFields).forEach(([key, value]) => {
+      const regex = new RegExp(`%${key}%`, 'g');
+      result = result.replace(regex, value);
+    });
+    return result;
+  };
 
   const handlePictureChange = async e => {
     const file = e.target.files[0];
@@ -51,25 +63,35 @@ const UserProfilePage = () => {
     }
   };
 
-  const handleGoToEdit        = () => navigate(`/user-profiles/edit/${userId}`);
+  const handleGoToEdit = () => navigate(`/user-profiles/edit/${userId}`);
   const handleGoToAddProgress = () => navigate('/progress-update');
-  const handleEditProgress    = id => navigate(`/progress-update/edit/${id}`);
-  const handleDeleteProgress  = async id => {
+  const handleEditProgress = id => navigate(`/progress-update/edit/${id}`);
+  const handleDeleteProgress = async id => {
     try {
-      await axios.delete(`http://localhost:8081/api/progress-updates/${id}`);
+      await axios.delete(`http://localhost:8081/api/progress-updates/delete/${id}`);
       setProgressUpdates(prev => prev.filter(u => u.id !== id));
     } catch {
       setMessage('Error deleting update.');
     }
   };
 
+  const handleToggle = id => {
+    setExpandedCards(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
   if (!userProfile) return null;
+
+  const sortedUpdates = [...progressUpdates].sort((a, b) =>
+    getDisplayDate(b) - getDisplayDate(a)
+  );
 
   return (
     <div className="min-h-screen bg-gray-100 pb-12">
       {/* PROFILE HEADER */}
       <div className="bg-white shadow mb-8">
         <div className="max-w-screen-xl mx-auto flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-0 md:space-x-8 p-8">
+          
+          {/* Picture */}
           <div className="relative">
             <img
               src={userProfile.profilePicture || 'https://via.placeholder.com/150'}
@@ -120,18 +142,14 @@ const UserProfilePage = () => {
             >
               Edit Profile
             </button>
-            <button
-              onClick={() => navigate('/login')}
-              className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
-            >
-              Logout
-            </button>
+            
           </div>
         </div>
       </div>
 
       {/* MAIN CONTENT */}
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+
         {/* INDIVIDUAL INFO */}
         <section className="bg-white rounded-lg shadow p-6">
           <h2 className="text-xl font-semibold text-gray-700 mb-4">Individual Information</h2>
@@ -177,59 +195,70 @@ const UserProfilePage = () => {
 
           {message && <p className="mb-4 text-center text-red-600">{message}</p>}
 
-          {progressUpdates.length === 0 ? (
+          {sortedUpdates.length === 0 ? (
             <p className="text-gray-600">No updates yet.</p>
           ) : (
             <div className="overflow-x-auto">
               <div className="inline-flex space-x-4 pb-2 scrollbar-thin scrollbar-thumb-gray-400">
-                {progressUpdates.map(update => (
-                  <div
-                    key={update.id}
-                    className="w-48 h-64 bg-gray-50 rounded-lg border p-4 flex-shrink-0 shadow-sm"
-                  >
-                    <h4 className="font-bold text-gray-800 whitespace-normal break-words">
-                      {update.updateType}
-                    </h4>
-                    <p className="mt-2 text-gray-700 whitespace-normal break-words">
-                      {update.updateText}
-                    </p>
-                    <p className="mt-2 text-sm text-gray-500">
-                      {new Date(update.progressDate).toLocaleDateString()}
-                    </p>
-                    <div className="mt-4 flex space-x-2">
-                      <button
-                        onClick={() => handleEditProgress(update.id)}
-                        className="text-sm px-2 py-1 bg-yellow-400 rounded hover:bg-yellow-500 transition"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDeleteProgress(update.id)}
-                        className="text-sm px-2 py-1 bg-red-400 rounded hover:bg-red-500 transition"
-                      >
-                        Delete
-                      </button>
+                {sortedUpdates.map(update => {
+                  const date = getDisplayDate(update).toLocaleDateString();
+                  const rawText = update.templateText || update.freeText || "";
+                  const text = update.templateText
+                    ? renderTemplate(update.templateText, update.extraFields)
+                    : update.freeText || "";
+                  const isExpanded = expandedCards[update.id];
+                  const limit = 100;
+                  const displayedText = !isExpanded && text.length > limit
+                    ? text.substring(0, limit) + '...'
+                    : text;
+
+                  return (
+                    <div
+                      key={update.id}
+                      className="w-48 h-auto bg-gray-50 rounded-lg border p-4 flex-shrink-0 shadow-sm"
+                    >
+                      <h4 className="font-semibold text-sm mb-1 text-indigo-600">{update.category}</h4>
+                      <p className="text-gray-800 text-sm">{displayedText}</p>
+
+                      {text.length > limit && (
+                        <button
+                          onClick={() => handleToggle(update.id)}
+                          className="text-blue-500 text-xs mt-1"
+                        >
+                          {isExpanded ? 'Show Less' : 'Show More'}
+                        </button>
+                      )}
+
+                      {update.extraFields && Object.entries(update.extraFields).map(([key, val]) => (
+                        <p key={key} className="text-gray-700 text-xs">
+                          <strong>{key}:</strong> {val}
+                        </p>
+                      ))}
+
+                      <p className="mt-2 text-xs text-gray-500">{date}</p>
+
+                      <div className="mt-4 flex space-x-2">
+                        <button
+                          onClick={() => handleEditProgress(update.id)}
+                          className="text-sm px-2 py-1 bg-yellow-400 rounded hover:bg-yellow-500 transition"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDeleteProgress(update.id)}
+                          className="text-sm px-2 py-1 bg-red-400 rounded hover:bg-red-500 transition"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
         </section>
 
-        {/* USER POSTS */}
-        <section className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold text-gray-700 mb-4">Shared Posts</h2>
-          {userPosts.length === 0 ? (
-            <p className="text-gray-600">No posts shared yet.</p>
-          ) : (
-            <div className="space-y-4">
-              {userPosts.map(post => (
-                <PostCard key={post.id} post={post} />
-              ))}
-            </div>
-          )}
-        </section>
       </div>
     </div>
   );
