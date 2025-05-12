@@ -67,4 +67,23 @@ public class UserProfileService {
         }
         return false; // Return false if profile not found
     }
+
+    public UserProfile follow(String userId, String targetId) {
+    UserProfile me     = userProfileRepository.findById(userId).orElseThrow();
+    UserProfile target = userProfileRepository.findById(targetId).orElseThrow();
+    me.getFollowing().add(targetId);
+    target.getFollowers().add(userId);
+    userProfileRepository.save(target);
+    return userProfileRepository.save(me);
+    }
+
+    public UserProfile unfollow(String userId, String targetId) {
+        UserProfile me     = userProfileRepository.findById(userId).orElseThrow();
+        UserProfile target = userProfileRepository.findById(targetId).orElseThrow();
+        me.getFollowing().remove(targetId);
+        target.getFollowers().remove(userId);
+        userProfileRepository.save(target);
+        return userProfileRepository.save(me);
+    }
+
 }
