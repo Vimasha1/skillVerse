@@ -11,7 +11,8 @@ import { Link } from 'react-router-dom';
 
 function PostCard({ post, onUpdate }) {
   const user = JSON.parse(sessionStorage.getItem('userProfile'));
-  const userId = user?.email ?? 'guest_user';
+const userId = user?.username ?? 'guest_user';  // ✅ now using username
+
   const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8081';
 
   const [likes, setLikes]               = useState(post.likes ?? []);
