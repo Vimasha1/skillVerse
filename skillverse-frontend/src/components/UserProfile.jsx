@@ -115,6 +115,23 @@ const UserProfilePage = () => {
             {userProfile.jobPosition && (
               <p className="text-indigo-600 mt-1">{userProfile.jobPosition}</p>
             )}
+
+            {/* Followers / Following counts */}
+            <div className="flex space-x-6 mt-2 text-gray-600">
+              <div>
+                <span className="font-semibold">
+                  {userProfile.followers ? userProfile.followers.length : 0}
+                </span>{' '}
+                Followers
+              </div>
+              <div>
+                <span className="font-semibold">
+                  {userProfile.following ? userProfile.following.length : 0}
+                </span>{' '}
+                Following
+              </div>
+            </div>
+
             <div className="flex flex-wrap items-center space-x-6 mt-4 text-gray-600">
               <a
                 href={`mailto:${userProfile.email}`}

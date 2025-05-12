@@ -61,4 +61,20 @@ public class UserProfileController {
         }
         return ResponseEntity.noContent().build();
     }
+
+    @PutMapping("/{userId}/follow/{targetId}")
+    public ResponseEntity<UserProfile> follow(
+            @PathVariable String userId,
+            @PathVariable String targetId) {
+        return ResponseEntity.ok(userProfileService.follow(userId, targetId));
+    }
+
+    @PutMapping("/{userId}/unfollow/{targetId}")
+    public ResponseEntity<UserProfile> unfollow(
+            @PathVariable String userId,
+            @PathVariable String targetId) {
+        return ResponseEntity.ok(userProfileService.unfollow(userId, targetId));
+    }
+
+
 }

@@ -1,5 +1,8 @@
 package com.skillverse.model;  // Corrected package declaration
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -18,6 +21,26 @@ public class UserProfile {
     private String education; // Educational background
     private String jobPosition; // Job position
     private String company; // Company name
+    private Set<String> following = new HashSet<>();  // IDs of users this user follows
+    private Set<String> followers = new HashSet<>();  // IDs of users who follow this user
+
+
+
+    public Set<String> getFollowing() {
+        return following;
+    }
+
+    public void setFollowing(Set<String> following) {
+        this.following = following;
+    }
+
+    public Set<String> getFollowers() {
+        return followers;
+    }
+
+    public void setFollowers(Set<String> followers) {
+        this.followers = followers;
+    }
 
     // Constructors
     public UserProfile() {}
