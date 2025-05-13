@@ -1,10 +1,10 @@
-package com.skillverse.model;  // Corrected package declaration
-
-import java.util.HashSet;
-import java.util.Set;
+package com.skillverse.model;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @Document(collection = "user_profiles")
 public class UserProfile {
@@ -18,34 +18,17 @@ public class UserProfile {
     private String email;
     private String phone;
     private String address;
-    private String education; // Educational background
-    private String jobPosition; // Job position
-    private String company; // Company name
-    private Set<String> following = new HashSet<>();  // IDs of users this user follows
-    private Set<String> followers = new HashSet<>();  // IDs of users who follow this user
+    private String education;
+    private String jobPosition;
+    private String company;
+    private String profilePicture; // URL or path to profile image
+    private Set<String> following = new HashSet<>();
+    private Set<String> followers = new HashSet<>();
 
-
-
-    public Set<String> getFollowing() {
-        return following;
-    }
-
-    public void setFollowing(Set<String> following) {
-        this.following = following;
-    }
-
-    public Set<String> getFollowers() {
-        return followers;
-    }
-
-    public void setFollowers(Set<String> followers) {
-        this.followers = followers;
-    }
-
-    // Constructors
     public UserProfile() {}
 
-    public UserProfile(String username, String password, String firstName, String lastName, String email, String phone, String address, String education, String jobPosition, String company) {
+    public UserProfile(String username, String password, String firstName, String lastName, String email, String phone,
+                       String address, String education, String jobPosition, String company) {
         this.username = username;
         this.password = password;
         this.firstName = firstName;
@@ -58,7 +41,6 @@ public class UserProfile {
         this.company = company;
     }
 
-    // Getters and Setters
     public String getId() {
         return id;
     }
@@ -145,5 +127,29 @@ public class UserProfile {
 
     public void setCompany(String company) {
         this.company = company;
+    }
+
+    public String getProfilePicture() {
+        return profilePicture;
+    }
+
+    public void setProfilePicture(String profilePicture) {
+        this.profilePicture = profilePicture;
+    }
+
+    public Set<String> getFollowing() {
+        return following;
+    }
+
+    public void setFollowing(Set<String> following) {
+        this.following = following;
+    }
+
+    public Set<String> getFollowers() {
+        return followers;
+    }
+
+    public void setFollowers(Set<String> followers) {
+        this.followers = followers;
     }
 }

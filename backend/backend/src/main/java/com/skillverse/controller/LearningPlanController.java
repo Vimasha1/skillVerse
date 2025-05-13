@@ -56,7 +56,27 @@ public class LearningPlanController {
         return ResponseEntity.noContent().build();
     }
 
-    // Error handler for validation failures
+    // ✅ NEW: Get plans by creator
+    @GetMapping("/created/{username}")
+    public List<LearningPlan> getPlansByCreator(@PathVariable String username) {
+        return service.getPlansByCreator(username);
+    }
+
+    // ✅ NEW: Share plan reference with another user (adds to sharedWith list)
+    @PutMapping("/{id}/share/{username}")
+    public ResponseEntity<LearningPlan> sharePlan(@PathVariable String id, @PathVariable String username) {
+        LearningPlan updated = service.sharePlanWithUser(id, username);
+        return updated != null ? ResponseEntity.ok(updated) : ResponseEntity.notFound().build();
+    }
+
+    // ✅ NEW: Duplicate the plan and assign to another user
+    @PostMapping("/{id}/share-with/{username}")
+    public ResponseEntity<LearningPlan> sharePlanWithUser(@PathVariable String id, @PathVariable String username) {
+        LearningPlan copy = service.duplicatePlanForUser(id, username);
+        return ResponseEntity.status(201).body(copy);
+    }
+
+    // ✅ Error handler for validation failures
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<String> handleValidationErrors(MethodArgumentNotValidException ex) {
         String errorMsg = ex.getBindingResult().getFieldErrors().stream()

@@ -16,7 +16,7 @@ public class UserProfileService {
     private UserProfileRepository userProfileRepository;
 
     @Autowired
-    private PasswordEncoder passwordEncoder;  // Autowire PasswordEncoder
+    private PasswordEncoder passwordEncoder;
 
     // Get all user profiles
     public List<UserProfile> getAllUserProfiles() {
@@ -25,12 +25,16 @@ public class UserProfileService {
 
     // Get a user profile by ID
     public UserProfile getUserProfileById(String id) {
-        return userProfileRepository.findById(id).orElse(null); // Returns null if not found
+        return userProfileRepository.findById(id).orElse(null);
+    }
+
+    // Get a user profile by username
+    public UserProfile getByUsername(String username) {
+        return userProfileRepository.findByUsername(username).orElse(null);
     }
 
     // Create a new user profile
     public UserProfile createUserProfile(UserProfile userProfile) {
-        // Hash the password before saving
         String hashedPassword = passwordEncoder.encode(userProfile.getPassword());
         userProfile.setPassword(hashedPassword);
         return userProfileRepository.save(userProfile);
@@ -49,36 +53,47 @@ public class UserProfileService {
             profile.setEducation(userProfile.getEducation());
             profile.setJobPosition(userProfile.getJobPosition());
             profile.setCompany(userProfile.getCompany());
-            // Only hash the password if it's being updated (not null or empty)
             if (userProfile.getPassword() != null && !userProfile.getPassword().isEmpty()) {
                 String hashedPassword = passwordEncoder.encode(userProfile.getPassword());
                 profile.setPassword(hashedPassword);
             }
             return userProfileRepository.save(profile);
         }
-        return null; // Return null if profile not found
+        return null;
+    }
+
+    // Update only profile picture
+    public void updateProfilePicture(String id, String picturePath) {
+        Optional<UserProfile> optional = userProfileRepository.findById(id);
+        if (optional.isPresent()) {
+            UserProfile profile = optional.get();
+            profile.setProfilePicture(picturePath);
+            userProfileRepository.save(profile);
+        }
     }
 
     // Delete a user profile by ID
     public boolean deleteUserProfile(String id) {
         if (userProfileRepository.existsById(id)) {
             userProfileRepository.deleteById(id);
-            return true; // Return true if deleted successfully
+            return true;
         }
-        return false; // Return false if profile not found
+        return false;
     }
 
+    // Follow another user
     public UserProfile follow(String userId, String targetId) {
-    UserProfile me     = userProfileRepository.findById(userId).orElseThrow();
-    UserProfile target = userProfileRepository.findById(targetId).orElseThrow();
-    me.getFollowing().add(targetId);
-    target.getFollowers().add(userId);
-    userProfileRepository.save(target);
-    return userProfileRepository.save(me);
+        UserProfile me = userProfileRepository.findById(userId).orElseThrow();
+        UserProfile target = userProfileRepository.findById(targetId).orElseThrow();
+        me.getFollowing().add(targetId);
+        target.getFollowers().add(userId);
+        userProfileRepository.save(target);
+        return userProfileRepository.save(me);
     }
 
+    // Unfollow a user
     public UserProfile unfollow(String userId, String targetId) {
-        UserProfile me     = userProfileRepository.findById(userId).orElseThrow();
+        UserProfile me = userProfileRepository.findById(userId).orElseThrow();
         UserProfile target = userProfileRepository.findById(targetId).orElseThrow();
         me.getFollowing().remove(targetId);
         target.getFollowers().remove(userId);
@@ -86,8 +101,8 @@ public class UserProfileService {
         return userProfileRepository.save(me);
     }
 
-    public UserProfile getByUsername(String username) {
-        return userProfileRepository.findByUsername(username).orElse(null);
+    // General save
+    public UserProfile save(UserProfile profile) {
+        return userProfileRepository.save(profile);
     }
-
 }

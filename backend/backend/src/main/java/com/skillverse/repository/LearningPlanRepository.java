@@ -8,6 +8,8 @@ public interface LearningPlanRepository extends MongoRepository<LearningPlan, St
     List<LearningPlan> findBySharedWithContaining(String username);
     List<LearningPlan> findBySkillType(String skillType);
 
+    List<LearningPlan> findByCreatedBy(String createdBy);
+    
     // Optionally extend with new queries for interactive fields if needed later
     // e.g., List<LearningPlan> findByVisibility(String visibility);
 }

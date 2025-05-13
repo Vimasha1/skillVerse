@@ -23,19 +23,21 @@ export default function CreateLearningPlanForm({ editMode = false }) {
     deadline: '',
     milestones: [emptyMilestone()],
     visibility: 'private',
+    createdBy: '',
   });
 
-  // ✅ Check auth on mount
+  // Check auth and set createdBy
   useEffect(() => {
     const storedUser = JSON.parse(sessionStorage.getItem('userProfile'));
     if (!storedUser) {
       navigate('/login');
     } else {
       setUser(storedUser);
+      setForm(f => ({ ...f, createdBy: storedUser.username || storedUser.email }));
     }
   }, [navigate]);
 
-  // ✅ Load existing plan if editing
+  // Load plan if editing
   useEffect(() => {
     if (editMode && id) {
       setLoading(true);
@@ -49,6 +51,7 @@ export default function CreateLearningPlanForm({ editMode = false }) {
             deadline: data.deadline || '',
             milestones: data.milestones?.length ? data.milestones : [emptyMilestone()],
             visibility: data.visibility || 'private',
+            createdBy: data.createdBy || '',
           });
           setTopics(data.topics || []);
         })
@@ -60,12 +63,8 @@ export default function CreateLearningPlanForm({ editMode = false }) {
     }
   }, [editMode, id]);
 
-  // ✅ Block UI until user is set
-  if (!user) {
-    return null;
-  }
+  if (!user) return null;
 
-  // Handlers
   const handleChange = e => {
     const { name, value } = e.target;
     setForm(f => ({ ...f, [name]: value }));
@@ -78,13 +77,14 @@ export default function CreateLearningPlanForm({ editMode = false }) {
       setTopicInput('');
     }
   };
+
   const addTopic = () => {
     if (!topicInput.trim()) return;
     setTopics(ts => [...ts, topicInput.trim()]);
     setTopicInput('');
   };
-  const removeTopic = idx =>
-    setTopics(ts => ts.filter((_, i) => i !== idx));
+
+  const removeTopic = idx => setTopics(ts => ts.filter((_, i) => i !== idx));
 
   const handleMilestoneChange = (idx, field, value) => {
     setForm(f => {
@@ -93,8 +93,10 @@ export default function CreateLearningPlanForm({ editMode = false }) {
       return { ...f, milestones: m };
     });
   };
+
   const addMilestone = () =>
     setForm(f => ({ ...f, milestones: [...f.milestones, emptyMilestone()] }));
+
   const removeMilestone = idx =>
     setForm(f => {
       const m = f.milestones.filter((_, i) => i !== idx);
@@ -103,11 +105,13 @@ export default function CreateLearningPlanForm({ editMode = false }) {
 
   const addResource = () =>
     setForm(f => ({ ...f, resources: [...f.resources, emptyResource()] }));
+
   const removeResource = idx =>
     setForm(f => {
       const r = f.resources.filter((_, i) => i !== idx);
       return { ...f, resources: r.length ? r : [emptyResource()] };
     });
+
   const updateResource = (idx, field, value) =>
     setForm(f => {
       const r = [...f.resources];
@@ -132,6 +136,7 @@ export default function CreateLearningPlanForm({ editMode = false }) {
         completed: ms.completed,
       })),
       visibility: form.visibility,
+      createdBy: form.createdBy,
     };
 
     try {
@@ -319,6 +324,16 @@ export default function CreateLearningPlanForm({ editMode = false }) {
         >
           + Add Milestone
         </button>
+      </div>
+
+      <div>
+        <label className="block font-medium">Created By</label>
+        <input
+          type="text"
+          value={form.createdBy}
+          disabled
+          className="w-full border rounded px-2 py-1 bg-gray-100 text-gray-600"
+        />
       </div>
 
       <button

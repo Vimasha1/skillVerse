@@ -4,6 +4,7 @@ import com.skillverse.model.LearningPlan;
 import com.skillverse.repository.LearningPlanRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -24,15 +25,15 @@ public class LearningPlanService {
     }
 
     public LearningPlan createPlan(LearningPlan plan) {
-        plan.recalcProgress();           // ← compute progress before insert
+        plan.recalcProgress(); // ← compute progress before insert
         return repo.save(plan);
     }
 
     public LearningPlan updatePlan(String id, LearningPlan updatedPlan) {
         LearningPlan existing = repo.findById(id)
-                                    .orElseThrow(() -> new RuntimeException("Plan not found"));
+                .orElseThrow(() -> new RuntimeException("Plan not found"));
 
-        // ─── Core fields ────────────────────────────────────────────────
+        // ─── Core fields ───────────────────────────────
         existing.setTitle(updatedPlan.getTitle());
         existing.setTopics(updatedPlan.getTopics());
         existing.setResources(updatedPlan.getResources());
@@ -41,11 +42,11 @@ public class LearningPlanService {
         existing.setCreatedBy(updatedPlan.getCreatedBy());
         existing.setSharedWith(updatedPlan.getSharedWith());
 
-        // ─── Milestones & progress ───────────────────────────────────────
+        // ─── Milestones & progress ─────────────────────
         existing.setMilestones(updatedPlan.getMilestones());
-        existing.recalcProgress();       // ← compute progress on update
+        existing.recalcProgress(); // ← compute progress on update
 
-        // ─── Other interactive fields ───────────────────────────────────
+        // ─── Other interactive fields ──────────────────
         existing.setReminders(updatedPlan.getReminders());
         existing.setCollaborators(updatedPlan.getCollaborators());
         existing.setVisibility(updatedPlan.getVisibility());
@@ -69,5 +70,46 @@ public class LearningPlanService {
 
     public List<LearningPlan> getPlansBySkillType(String type) {
         return repo.findBySkillType(type);
+    }
+
+    // ✅ Added from your friend's version
+    public List<LearningPlan> getPlansByCreator(String username) {
+        return repo.findByCreatedBy(username);
+    }
+
+    public LearningPlan sharePlanWithUser(String planId, String username) {
+        LearningPlan plan = repo.findById(planId).orElse(null);
+        if (plan != null && !plan.getSharedWith().contains(username)) {
+            plan.getSharedWith().add(username);
+            return repo.save(plan);
+        }
+        return plan;
+    }
+
+    public LearningPlan duplicatePlanForUser(String planId, String targetUsername) {
+        LearningPlan original = repo.findById(planId)
+                .orElseThrow(() -> new RuntimeException("Original plan not found"));
+
+        LearningPlan copy = new LearningPlan();
+        copy.setTitle(original.getTitle());
+        copy.setTopics(new ArrayList<>(original.getTopics()));
+        copy.setSkillType(original.getSkillType());
+        copy.setResources(new ArrayList<>(original.getResources()));
+        copy.setDeadline(original.getDeadline());
+        copy.setMilestones(new ArrayList<>(original.getMilestones()));
+        copy.setReminders(new ArrayList<>(original.getReminders()));
+        copy.setCollaborators(new ArrayList<>(original.getCollaborators()));
+        copy.setVisibility("private");
+        copy.setLikes(0);
+        copy.setTags(new ArrayList<>(original.getTags()));
+        copy.setCompletionDate(original.getCompletionDate());
+        copy.setLastReviewedAt(original.getLastReviewedAt());
+        copy.setRankedPriority(original.getRankedPriority());
+        copy.setFeedback(new ArrayList<>());
+        copy.setCreatedBy(targetUsername);
+
+        copy.recalcProgress();
+
+        return repo.save(copy);
     }
 }
