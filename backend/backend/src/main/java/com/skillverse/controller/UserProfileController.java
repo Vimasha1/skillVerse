@@ -61,4 +61,27 @@ public class UserProfileController {
         }
         return ResponseEntity.noContent().build();
     }
+
+    @PutMapping("/{userId}/follow/{targetId}")
+    public ResponseEntity<UserProfile> follow(
+            @PathVariable String userId,
+            @PathVariable String targetId) {
+        return ResponseEntity.ok(userProfileService.follow(userId, targetId));
+    }
+
+    @PutMapping("/{userId}/unfollow/{targetId}")
+    public ResponseEntity<UserProfile> unfollow(
+            @PathVariable String userId,
+            @PathVariable String targetId) {
+        return ResponseEntity.ok(userProfileService.unfollow(userId, targetId));
+    }
+
+    // GET /api/user-profiles/by-username/{username}
+    @GetMapping("/by-username/{username}")
+    public ResponseEntity<UserProfile> getByUsername(@PathVariable String username) {
+        UserProfile profile = userProfileService.getByUsername(username);
+        if (profile == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(profile);
+    }   
+
 }

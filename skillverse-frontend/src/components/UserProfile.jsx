@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import axios from 'axios';
-import PostCard from './PostCard';
+import React, { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import axios from "axios";
+import PostCard from "./PostCard";
 
 const UserProfilePage = () => {
   const navigate = useNavigate();
@@ -10,67 +10,73 @@ const UserProfilePage = () => {
   const [userProfile, setUserProfile] = useState(null);
   const [progressUpdates, setProgressUpdates] = useState([]);
   const [userPosts, setUserPosts] = useState([]);
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState("");
   const [expandedCards, setExpandedCards] = useState({});
 
   useEffect(() => {
-    if (!userId) return navigate('/login');
+    if (!userId) return navigate("/login");
 
     axios
       .get(`http://localhost:8081/api/user-profiles/${userId}`)
-      .then(res => {
+      .then((res) => {
         setUserProfile(res.data);
-        return axios.get(`http://localhost:8081/api/posts/user/${res.data.username}`);
+        return axios.get(
+          `http://localhost:8081/api/posts/user/${res.data.username}`
+        );
       })
-      .then(postRes => setUserPosts(postRes.data))
-      .catch(() => setMessage('Error loading profile or posts.'));
+      .then((postRes) => setUserPosts(postRes.data))
+      .catch(() => setMessage("Error loading profile or posts."));
 
     axios
       .get(`http://localhost:8081/api/progress-updates/user/${userId}`)
-      .then(res => setProgressUpdates(res.data))
-      .catch(() => setMessage('Error loading updates.'));
+      .then((res) => setProgressUpdates(res.data))
+      .catch(() => setMessage("Error loading updates."));
   }, [userId, navigate]);
 
-  const handlePictureChange = async e => {
+  const handlePictureChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
     const form = new FormData();
-    form.append('file', file);
+    form.append("file", file);
     try {
       await axios.post(
         `http://localhost:8081/api/user-profiles/upload/${userId}`,
         form,
-        { headers: { 'Content-Type': 'multipart/form-data' } }
+        { headers: { "Content-Type": "multipart/form-data" } }
       );
-      const { data } = await axios.get(`http://localhost:8081/api/user-profiles/${userId}`);
+      const { data } = await axios.get(
+        `http://localhost:8081/api/user-profiles/${userId}`
+      );
       setUserProfile(data);
     } catch {
-      setMessage('Could not upload picture.');
+      setMessage("Could not upload picture.");
     }
   };
 
   const handleGoToEdit = () => navigate(`/user-profiles/edit/${userId}`);
-  const handleGoToAddProgress = () => navigate('/progress-update');
-  const handleEditProgress = id => navigate(`/progress-update/edit/${id}`);
-  const handleDeleteProgress = async id => {
+  const handleGoToAddProgress = () => navigate("/progress-update");
+  const handleEditProgress = (id) => navigate(`/progress-update/edit/${id}`);
+  const handleDeleteProgress = async (id) => {
     try {
-      await axios.delete(`http://localhost:8081/api/progress-updates/delete/${id}`);
-      setProgressUpdates(prev => prev.filter(u => u.id !== id));
+      await axios.delete(
+        `http://localhost:8081/api/progress-updates/delete/${id}`
+      );
+      setProgressUpdates((prev) => prev.filter((u) => u.id !== id));
     } catch {
-      setMessage('Error deleting update.');
+      setMessage("Error deleting update.");
     }
   };
 
-  const handleToggle = id => {
-    setExpandedCards(prev => ({ ...prev, [id]: !prev[id] }));
+  const handleToggle = (id) => {
+    setExpandedCards((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const getDisplayDate = update => new Date(update.progressDate);
+  const getDisplayDate = (update) => new Date(update.progressDate);
 
   const renderTemplate = (templateText, extraFields = {}) => {
     let result = templateText;
     Object.entries(extraFields).forEach(([key, value]) => {
-      const regex = new RegExp(`%${key}%`, 'g');
+      const regex = new RegExp(`%${key}%`, "g");
       result = result.replace(regex, value);
     });
     return result;
@@ -78,8 +84,8 @@ const UserProfilePage = () => {
 
   if (!userProfile) return null;
 
-  const sortedUpdates = [...progressUpdates].sort((a, b) =>
-    getDisplayDate(b) - getDisplayDate(a)
+  const sortedUpdates = [...progressUpdates].sort(
+    (a, b) => getDisplayDate(b) - getDisplayDate(a)
   );
 
   return (
@@ -89,7 +95,9 @@ const UserProfilePage = () => {
         <div className="max-w-screen-xl mx-auto flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-0 md:space-x-8 p-8">
           <div className="relative">
             <img
-              src={userProfile.profilePicture || 'https://via.placeholder.com/150'}
+              src={
+                userProfile.profilePicture || "https://via.placeholder.com/150"
+              }
               alt="Profile"
               className="w-32 h-32 rounded-full border-2 border-gray-300 object-cover"
             />
@@ -115,6 +123,23 @@ const UserProfilePage = () => {
             {userProfile.jobPosition && (
               <p className="text-indigo-600 mt-1">{userProfile.jobPosition}</p>
             )}
+
+            {/* Followers / Following counts */}
+            <div className="flex space-x-6 mt-2 text-gray-600">
+              <div>
+                <span className="font-semibold">
+                  {userProfile.followers ? userProfile.followers.length : 0}
+                </span>{" "}
+                Followers
+              </div>
+              <div>
+                <span className="font-semibold">
+                  {userProfile.following ? userProfile.following.length : 0}
+                </span>{" "}
+                Following
+              </div>
+            </div>
+
             <div className="flex flex-wrap items-center space-x-6 mt-4 text-gray-600">
               <a
                 href={`mailto:${userProfile.email}`}
@@ -130,23 +155,32 @@ const UserProfilePage = () => {
             </div>
           </div>
 
-          <div className="flex space-x-3">
-            <button
-              onClick={handleGoToEdit}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-            >
-              Edit Profile
-            </button>
-          </div>
+<div className="flex flex-col space-y-3 items-end">
+  <button
+    onClick={handleGoToEdit}
+    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+  >
+    Edit Profile
+  </button>
+
+  <button
+    onClick={() => navigate("/resume")}
+    className="px-2 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
+  >
+    ✨ Generate Resume AI
+  </button>
+</div>
+
         </div>
       </div>
 
       {/* MAIN CONTENT */}
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-
         {/* INDIVIDUAL INFO */}
         <section className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold text-gray-700 mb-4">Individual Information</h2>
+          <h2 className="text-xl font-semibold text-gray-700 mb-4">
+            Individual Information
+          </h2>
           <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
             <div>
               <dt className="font-medium text-gray-600">Username</dt>
@@ -154,7 +188,9 @@ const UserProfilePage = () => {
             </div>
             <div>
               <dt className="font-medium text-gray-600">Education</dt>
-              <dd className="mt-1 text-gray-800">{userProfile.education || '—'}</dd>
+              <dd className="mt-1 text-gray-800">
+                {userProfile.education || "—"}
+              </dd>
             </div>
             <div>
               <dt className="font-medium text-gray-600">Address</dt>
@@ -170,7 +206,9 @@ const UserProfilePage = () => {
         {/* PROGRESS UPDATES */}
         <section className="bg-white rounded-lg shadow p-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-gray-700">Progress Updates</h2>
+            <h2 className="text-xl font-semibold text-gray-700">
+              Progress Updates
+            </h2>
             <div className="flex space-x-2">
               <button
                 onClick={handleGoToAddProgress}
@@ -179,7 +217,7 @@ const UserProfilePage = () => {
                 + Add update
               </button>
               <button
-                onClick={() => navigate('/all-progress-updates')}
+                onClick={() => navigate("/all-progress-updates")}
                 className="px-3 py-1 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
               >
                 All updates & analytics
@@ -187,29 +225,34 @@ const UserProfilePage = () => {
             </div>
           </div>
 
-          {message && <p className="mb-4 text-center text-red-600">{message}</p>}
+          {message && (
+            <p className="mb-4 text-center text-red-600">{message}</p>
+          )}
 
           {sortedUpdates.length === 0 ? (
             <p className="text-gray-600">No updates yet.</p>
           ) : (
             <div className="overflow-x-auto">
               <div className="inline-flex space-x-4 pb-2 scrollbar-thin scrollbar-thumb-gray-400">
-                {sortedUpdates.map(update => {
+                {sortedUpdates.map((update) => {
                   const text = update.templateText
                     ? renderTemplate(update.templateText, update.extraFields)
-                    : update.freeText || '';
+                    : update.freeText || "";
                   const isExpanded = expandedCards[update.id];
                   const limit = 100;
-                  const displayedText = !isExpanded && text.length > limit
-                    ? text.substring(0, limit) + '...'
-                    : text;
+                  const displayedText =
+                    !isExpanded && text.length > limit
+                      ? text.substring(0, limit) + "..."
+                      : text;
 
                   return (
                     <div
                       key={update.id}
                       className="w-48 h-auto bg-gray-50 rounded-lg border p-4 flex-shrink-0 shadow-sm"
                     >
-                      <h4 className="font-semibold text-sm mb-1 text-indigo-600">{update.category}</h4>
+                      <h4 className="font-semibold text-sm mb-1 text-indigo-600">
+                        {update.category}
+                      </h4>
                       <p className="text-gray-800 text-sm">{displayedText}</p>
 
                       {text.length > limit && (
@@ -217,15 +260,16 @@ const UserProfilePage = () => {
                           onClick={() => handleToggle(update.id)}
                           className="text-blue-500 text-xs mt-1"
                         >
-                          {isExpanded ? 'Show Less' : 'Show More'}
+                          {isExpanded ? "Show Less" : "Show More"}
                         </button>
                       )}
 
-                      {update.extraFields && Object.entries(update.extraFields).map(([key, val]) => (
-                        <p key={key} className="text-gray-700 text-xs">
-                          <strong>{key}:</strong> {val}
-                        </p>
-                      ))}
+                      {update.extraFields &&
+                        Object.entries(update.extraFields).map(([key, val]) => (
+                          <p key={key} className="text-gray-700 text-xs">
+                            <strong>{key}:</strong> {val}
+                          </p>
+                        ))}
 
                       <p className="mt-2 text-xs text-gray-500">
                         {new Date(update.progressDate).toLocaleDateString()}
@@ -255,18 +299,19 @@ const UserProfilePage = () => {
 
         {/* SHARED POSTS SECTION */}
         <section className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold text-gray-700 mb-4">Shared Posts</h2>
+          <h2 className="text-xl font-semibold text-gray-700 mb-4">
+            Shared Posts
+          </h2>
           {userPosts.length === 0 ? (
             <p className="text-gray-600">No posts shared yet.</p>
           ) : (
             <div className="space-y-6">
-              {userPosts.map(post => (
+              {userPosts.map((post) => (
                 <PostCard key={post.id} post={post} />
               ))}
             </div>
           )}
         </section>
-
       </div>
     </div>
   );

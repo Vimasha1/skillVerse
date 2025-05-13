@@ -1,3 +1,5 @@
+// src/components/PostCard.jsx
+
 import React, { useState, useCallback, useEffect } from 'react';
 import {
   HandThumbUpIcon,
@@ -7,26 +9,64 @@ import {
   TrashIcon,
 } from '@heroicons/react/24/outline';
 import { toast } from 'react-toastify';
+import { Link } from 'react-router-dom';
+import axios from 'axios';
 
 function PostCard({ post, onUpdate }) {
   const user = JSON.parse(sessionStorage.getItem('userProfile'));
-const userId = user?.username ?? 'guest_user';  // ✅ now using username
+  const myUsername = user?.username ?? 'guest_user';
 
   const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8081';
 
-  const [likes, setLikes]               = useState(post.likes ?? []);
-  const [commentList, setCommentList]   = useState(post.comments ?? []);
-  const [comment, setComment]           = useState('');
+  const [likes, setLikes]             = useState(post.likes ?? []);
+  const [commentList, setCommentList] = useState(post.comments ?? []);
+  const [comment, setComment]         = useState('');
   const [editingComment, setEditingComment] = useState(null);
-  const [editingReply, setEditingReply] = useState({});
-  const [replies, setReplies]           = useState({});
-  const [showComments, setShowComments] = useState(true);
-  const [error, setError]               = useState('');
+  const [editingReply, setEditingReply]     = useState({});
+  const [replies, setReplies]               = useState({});
+  const [showComments, setShowComments]     = useState(true);
+  const [error, setError]                   = useState('');
 
+  // cache of { username: UserProfile }
+  const [userCache, setUserCache] = useState({});
+
+  // keep likes & comments in sync when `post` changes
   useEffect(() => {
     setLikes(post.likes ?? []);
     setCommentList(post.comments ?? []);
   }, [post.likes, post.comments]);
+
+  // whenever post.userId or any comment/reply userIds change, fetch missing profiles
+  useEffect(() => {
+    const allUsernames = new Set();
+    if (post.userId) allUsernames.add(post.userId);
+    commentList.forEach(c => {
+      if (c.userId) allUsernames.add(c.userId);
+      (c.replies || []).forEach(r => {
+        if (r.userId) allUsernames.add(r.userId);
+      });
+    });
+
+    const toFetch = Array.from(allUsernames).filter(u => !userCache[u]);
+    if (toFetch.length === 0) return;
+
+    Promise.all(
+      toFetch.map(username =>
+        axios
+          .get(`${BASE_URL}/api/user-profiles/by-username/${encodeURIComponent(username)}`)
+          .then(res => ({ username, profile: res.data }))
+          .catch(() => null)
+      )
+    ).then(results => {
+      const next = { ...userCache };
+      results.forEach(r => {
+        if (r && r.profile) {
+          next[r.username] = r.profile;
+        }
+      });
+      setUserCache(next);
+    });
+  }, [post.userId, commentList, BASE_URL, userCache]);
 
   const fetchComments = useCallback(async () => {
     try {
@@ -39,12 +79,18 @@ const userId = user?.username ?? 'guest_user';  // ✅ now using username
   }, [BASE_URL, post.id]);
 
   const handleLike = useCallback(() => {
-    if (!user) { toast.info('Please log in to like posts'); return; }
+    if (!user) {
+      toast.info('Please log in to like posts');
+      return;
+    }
 
-    const hasLiked = likes.includes(userId);
-    setLikes(hasLiked ? likes.filter(id => id !== userId) : [...likes, userId]);
+    const hasLiked = likes.includes(myUsername);
+    setLikes(hasLiked
+      ? likes.filter(u => u !== myUsername)
+      : [...likes, myUsername]
+    );
 
-    fetch(`${BASE_URL}/api/posts/${post.id}/like?userId=${encodeURIComponent(userId)}`, {
+    fetch(`${BASE_URL}/api/posts/${post.id}/like?userId=${encodeURIComponent(myUsername)}`, {
       method: 'POST',
       credentials: 'include',
     })
@@ -54,24 +100,27 @@ const userId = user?.username ?? 'guest_user';  // ✅ now using username
         onUpdate?.();
       })
       .catch(() => {
-        setLikes(likes); // rollback
+        setLikes(likes);
         setError('Could not update like. Please try again.');
       });
-  }, [BASE_URL, post.id, likes, userId, user, onUpdate]);
+  }, [BASE_URL, post.id, likes, myUsername, user, onUpdate]);
 
   const handleCommentSubmit = () => {
     if (!comment.trim()) return;
-    if (!user) { toast.info('Please log in to comment'); return; }
+    if (!user) {
+      toast.info('Please log in to comment');
+      return;
+    }
 
     const isEdit = Boolean(editingComment);
     const url = isEdit
       ? `${BASE_URL}/api/posts/${post.id}/comments/${editingComment}` +
         `?newText=${encodeURIComponent(comment)}` +
-        `&userId=${encodeURIComponent(userId)}`
+        `&userId=${encodeURIComponent(myUsername)}`
       : `${BASE_URL}/api/posts/${post.id}/comments`;
 
     const method = isEdit ? 'PUT' : 'POST';
-    const body   = isEdit ? null : JSON.stringify({ userId, text: comment });
+    const body   = isEdit ? null : JSON.stringify({ userId: myUsername, text: comment });
 
     fetch(url, {
       method,
@@ -90,12 +139,10 @@ const userId = user?.username ?? 'guest_user';  // ✅ now using username
   };
 
   const handleCommentDelete = cid => {
-    fetch(`${BASE_URL}/api/posts/${post.id}/comments/${cid}` +
-          `?userId=${encodeURIComponent(userId)}`, {
-      method: 'DELETE',
-      credentials: 'include',
-    })
-    .then(() => {
+    fetch(
+      `${BASE_URL}/api/posts/${post.id}/comments/${cid}?userId=${encodeURIComponent(myUsername)}`,
+      { method: 'DELETE', credentials: 'include' }
+    ).then(() => {
       fetchComments();
       onUpdate?.();
     });
@@ -108,17 +155,20 @@ const userId = user?.username ?? 'guest_user';  // ✅ now using username
   const handleReplySubmit = cid => {
     const replyText = (replies[cid] || '').trim();
     if (!replyText) return;
-    if (!user) { toast.info('Please log in to reply'); return; }
+    if (!user) {
+      toast.info('Please log in to reply');
+      return;
+    }
 
     const isEdit = Boolean(editingReply[cid]);
     const url = isEdit
       ? `${BASE_URL}/api/posts/${post.id}/comments/${cid}/replies/${editingReply[cid]}` +
         `?newText=${encodeURIComponent(replyText)}` +
-        `&userId=${encodeURIComponent(userId)}`
+        `&userId=${encodeURIComponent(myUsername)}`
       : `${BASE_URL}/api/posts/${post.id}/comments/${cid}/replies`;
 
     const method = isEdit ? 'PUT' : 'POST';
-    const body   = isEdit ? null : JSON.stringify({ userId, text: replyText });
+    const body   = isEdit ? null : JSON.stringify({ userId: myUsername, text: replyText });
 
     fetch(url, {
       method,
@@ -137,12 +187,11 @@ const userId = user?.username ?? 'guest_user';  // ✅ now using username
   };
 
   const handleReplyDelete = (cid, rid) => {
-    fetch(`${BASE_URL}/api/posts/${post.id}/comments/${cid}/replies/${rid}` +
-          `?userId=${encodeURIComponent(userId)}`, {
-      method: 'DELETE',
-      credentials: 'include',
-    })
-    .then(() => {
+    fetch(
+      `${BASE_URL}/api/posts/${post.id}/comments/${cid}/replies/${rid}` +
+      `?userId=${encodeURIComponent(myUsername)}`,
+      { method: 'DELETE', credentials: 'include' }
+    ).then(() => {
       fetchComments();
       onUpdate?.();
     });
@@ -152,43 +201,61 @@ const userId = user?.username ?? 'guest_user';  // ✅ now using username
     <div className="bg-white shadow rounded-lg p-5 mb-6">
       {error && <div className="text-red-500 mb-2">{error}</div>}
 
-      {/* —————— POST HEADER —————— */}
+      {/* — POST HEADER — */}
       <div className="mb-3">
         <h2 className="text-xl font-semibold">{post.skillName}</h2>
         <p className="text-sm text-gray-500">
-          Posted by <span className="font-medium">{post.userId}</span>
+          Posted by{' '}
+          {userCache[post.userId] ? (
+            <Link
+              to={`/public-profile/${userCache[post.userId].id}`}
+              className="text-blue-600 hover:underline"
+            >
+              {userCache[post.userId].username}
+            </Link>
+          ) : (
+            <span className="text-gray-400">{post.userId}</span>
+          )}
         </p>
       </div>
 
-      {/* —————— DESCRIPTION —————— */}
+      {/* — DESCRIPTION — */}
       <p className="text-gray-700">{post.description}</p>
 
-      {/* —————— MEDIA COLLAGE —————— */}
+      {/* — MEDIA COLLAGE — */}
       {post.mediaUrls?.length > 0 && (
         <div className="grid grid-cols-2 gap-4 my-4">
           {post.mediaUrls.map(url =>
-            url.endsWith('.mp4')
-              ? <video key={url} controls className="w-full h-auto rounded">
-                  <source src={`${BASE_URL}${url}`} type="video/mp4" />
-                </video>
-              : <img key={url} src={`${BASE_URL}${url}`} alt="" className="w-full h-auto rounded" />
+            url.endsWith('.mp4') ? (
+              <video key={url} controls className="w-full h-auto rounded">
+                <source src={`${BASE_URL}${url}`} type="video/mp4" />
+              </video>
+            ) : (
+              <img key={url} src={`${BASE_URL}${url}`} alt="" className="w-full h-auto rounded" />
+            )
           )}
         </div>
       )}
 
-      {/* —————— ACTIONS —————— */}
+      {/* — ACTIONS — */}
       <div className="flex space-x-4 mt-4 text-sm text-gray-600">
-        <button onClick={handleLike} className="flex items-center space-x-1 hover:text-blue-500">
+        <button
+          onClick={handleLike}
+          className="flex items-center space-x-1 hover:text-blue-500"
+        >
           <HandThumbUpIcon className="w-5 h-5" />
-          <span>{likes.includes(userId) ? 'Unlike' : 'Like'} ({likes.length})</span>
+          <span>{likes.includes(myUsername) ? 'Unlike' : 'Like'} ({likes.length})</span>
         </button>
-        <button onClick={() => setShowComments(v => !v)} className="flex items-center space-x-1 hover:text-blue-500">
+        <button
+          onClick={() => setShowComments(v => !v)}
+          className="flex items-center space-x-1 hover:text-blue-500"
+        >
           <ChatBubbleLeftEllipsisIcon className="w-5 h-5" />
           <span>Comment</span>
         </button>
       </div>
 
-      {/* —————— COMMENTS & REPLIES —————— */}
+      {/* — COMMENTS & REPLIES — */}
       {showComments && (
         <div className="mt-4">
           {/* new/edit comment box */}
@@ -199,8 +266,10 @@ const userId = user?.username ?? 'guest_user';  // ✅ now using username
               placeholder="Add a comment"
               className="border border-gray-300 rounded px-3 py-1 w-3/4 mr-2"
             />
-            <button onClick={handleCommentSubmit}
-                    className="bg-blue-500 text-white px-4 py-1 rounded">
+            <button
+              onClick={handleCommentSubmit}
+              className="bg-blue-500 text-white px-4 py-1 rounded"
+            >
               {editingComment ? 'Update' : 'Post'}
             </button>
           </div>
@@ -208,8 +277,22 @@ const userId = user?.username ?? 'guest_user';  // ✅ now using username
           {/* list of comments */}
           {commentList.map(c => (
             <div key={c.id} className="border-t pt-2 mt-2 text-sm text-gray-800">
-              <strong>{c.userId}:</strong> {c.text}
-              {c.userId === userId && (
+              <strong>
+                {userCache[c.userId] ? (
+                  <Link
+                    to={`/public-profile/${userCache[c.userId].id}`}
+                    className="text-blue-600 hover:underline"
+                  >
+                    {userCache[c.userId].username}
+                  </Link>
+                ) : (
+                  <span className="text-gray-400">{c.userId}</span>
+                )}
+                :
+              </strong>{' '}
+              {c.text}
+
+              {c.userId === myUsername && (
                 <div className="space-x-2 text-xs mt-1 text-blue-600">
                   <button onClick={() => { setComment(c.text); setEditingComment(c.id); }}>
                     <PencilIcon className="w-4 h-4 inline" /> Edit
@@ -225,8 +308,22 @@ const userId = user?.username ?? 'guest_user';  // ✅ now using username
                 {c.replies?.map(r => (
                   <div key={r.id} className="mb-1 text-sm">
                     <ArrowUturnLeftIcon className="inline w-4 h-4 mr-1" />
-                    <strong>{r.userId}:</strong> {r.text}
-                    {r.userId === userId && (
+                    <strong>
+                      {userCache[r.userId] ? (
+                        <Link
+                          to={`/public-profile/${userCache[r.userId].id}`}
+                          className="text-blue-600 hover:underline"
+                        >
+                          {userCache[r.userId].username}
+                        </Link>
+                      ) : (
+                        <span className="text-gray-400">{r.userId}</span>
+                      )}
+                      :
+                    </strong>{' '}
+                    {r.text}
+
+                    {r.userId === myUsername && (
                       <span className="inline ml-2 text-xs text-blue-600 space-x-2">
                         <button onClick={() => {
                           setReplies(prev => ({ ...prev, [c.id]: r.text }));
@@ -249,8 +346,10 @@ const userId = user?.username ?? 'guest_user';  // ✅ now using username
                     placeholder="Reply..."
                     className="border border-gray-300 rounded px-2 py-1 w-2/3 mr-2"
                   />
-                  <button onClick={() => handleReplySubmit(c.id)}
-                          className="bg-gray-200 px-3 py-1 rounded text-sm">
+                  <button
+                    onClick={() => handleReplySubmit(c.id)}
+                    className="bg-gray-200 px-3 py-1 rounded text-sm"
+                  >
                     {editingReply[c.id] ? 'Update' : 'Reply'}
                   </button>
                 </div>

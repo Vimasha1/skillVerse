@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { Link } from 'react-router-dom';
 
 const ProgressUpdateFeed = () => {
   const [updates, setUpdates] = useState([]);
@@ -112,14 +113,18 @@ const ProgressUpdateFeed = () => {
               >
                 {/* Author */}
                 <div className="flex items-center mb-3 space-x-2">
-                  <img
-                    src={author.profilePicture || 'https://via.placeholder.com/24'}
-                    alt={author.username}
-                    className="w-6 h-6 rounded-full object-cover"
-                  />
-                  <span className="font-medium text-gray-800">
-                    {author.username || 'Unknown'}
-                  </span>
+                  <Link to={`/public-profile/${author.id}`}>
+                    <img
+                      src={author.profilePicture || 'https://via.placeholder.com/24'}
+                      alt={author.username}
+                      className="w-6 h-6 rounded-full object-cover"
+                    />
+                  </Link>
+                  <Link to={`/public-profile/${author.id}`}>
+                    <span className="font-medium text-gray-800 hover:underline">
+                      {author.username || 'Unknown'}
+                    </span>
+                  </Link>
                 </div>
 
                 {/* Content */}
