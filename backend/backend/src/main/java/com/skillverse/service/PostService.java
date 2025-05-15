@@ -1,8 +1,10 @@
 package com.skillverse.service;
 
 import com.skillverse.model.Comment;
+import com.skillverse.model.Notification;
 import com.skillverse.model.Post;
 import com.skillverse.model.Reply;
+import com.skillverse.repository.NotificationRepository;
 import com.skillverse.repository.PostRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,17 +20,17 @@ public class PostService {
     @Autowired
     private PostRepository postRepository;
 
-    // ✅ Save uploaded files and return created post
+    @Autowired
+    private NotificationRepository notificationRepository;
+
+    // Save uploaded files and return created post
     public Post createPostWithFiles(Post post, MultipartFile[] files) {
         List<String> mediaUrls = new ArrayList<>();
 
-        // ✅ Absolute path to avoid missing directory
         String uploadDir = System.getProperty("user.dir") + "/uploads";
-
         File dir = new File(uploadDir);
         if (!dir.exists()) {
-            boolean created = dir.mkdirs();
-            System.out.println("Created upload directory: " + uploadDir + " → " + created);
+            dir.mkdirs();
         }
 
         if (files != null) {
@@ -37,11 +39,9 @@ public class PostService {
                     try {
                         String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
                         File dest = new File(dir, fileName);
-                        System.out.println("Uploading file to: " + dest.getAbsolutePath());
                         file.transferTo(dest);
                         mediaUrls.add("/uploads/" + fileName);
                     } catch (IOException e) {
-                        System.err.println("Failed to upload file: " + file.getOriginalFilename());
                         e.printStackTrace();
                     }
                 }
@@ -51,17 +51,17 @@ public class PostService {
         post.setMediaUrls(mediaUrls);
         post.setCreatedAt(new Date());
         post.setUpdatedAt(new Date());
-        if (post.getLikes() == null) post.setLikes(new ArrayList<>());
+        if (post.getLikes() == null)  post.setLikes(new ArrayList<>());
         if (post.getComments() == null) post.setComments(new ArrayList<>());
 
         return postRepository.save(post);
     }
 
-    // ✅ Create post using JSON (no media files)
+    // Create post using JSON (no media files)
     public Post createPost(Post post) {
         post.setCreatedAt(new Date());
         post.setUpdatedAt(new Date());
-        if (post.getLikes() == null) post.setLikes(new ArrayList<>());
+        if (post.getLikes() == null)  post.setLikes(new ArrayList<>());
         if (post.getComments() == null) post.setComments(new ArrayList<>());
         return postRepository.save(post);
     }
@@ -88,16 +88,40 @@ public class PostService {
         return false;
     }
 
+    /**
+     * Toggle like for a post, and notify the post owner if somebody else liked it.
+     */
     public Post toggleLike(String postId, String userId) {
         Post post = postRepository.findById(postId).orElseThrow();
         List<String> likes = post.getLikes();
-        if (likes.contains(userId)) likes.remove(userId);
-        else likes.add(userId);
+        boolean nowLiked;
+        if (likes.contains(userId)) {
+            likes.remove(userId);
+            nowLiked = false;
+        } else {
+            likes.add(userId);
+            nowLiked = true;
+        }
         post.setLikes(likes);
         post.setUpdatedAt(new Date());
-        return postRepository.save(post);
+        Post saved = postRepository.save(post);
+
+        // send notification only on like (not unlike), and only if liker != owner
+        if (nowLiked && !userId.equals(post.getUserId())) {
+            Notification n = new Notification();
+            n.setRecipientUsername(post.getUserId());
+            n.setActorUsername(userId);
+            n.setType("LIKE");
+            n.setPostId(postId);
+            notificationRepository.save(n);
+        }
+
+        return saved;
     }
 
+    /**
+     * Add a comment, notify the post owner if commenter != owner.
+     */
     public Post addComment(String postId, Comment comment) {
         Post post = postRepository.findById(postId).orElseThrow();
         comment.setId(UUID.randomUUID().toString());
@@ -105,13 +129,30 @@ public class PostService {
         comment.setReplies(new ArrayList<>());
         post.getComments().add(comment);
         post.setUpdatedAt(new Date());
-        return postRepository.save(post);
+        Post saved = postRepository.save(post);
+
+        // notify post owner if different
+        if (!comment.getUserId().equals(post.getUserId())) {
+            Notification n = new Notification();
+            n.setRecipientUsername(post.getUserId());
+            n.setActorUsername(comment.getUserId());
+            n.setType("COMMENT");
+            n.setPostId(postId);
+            n.setCommentId(comment.getId());
+            notificationRepository.save(n);
+        }
+
+        return saved;
     }
 
-    public Post editComment(String postId, String commentId, String newText) {
+    /**
+     * Edit a comment (authorization elsewhere).
+     */
+    public Post editComment(String postId, String commentId, String newText, String userId) {
         Post post = postRepository.findById(postId).orElseThrow();
         for (Comment comment : post.getComments()) {
-            if (comment.getId().equals(commentId)) {
+            if (comment.getId().equals(commentId)
+             && comment.getUserId().equals(userId)) {
                 comment.setText(newText);
                 comment.setUpdatedAt(new Date());
                 break;
@@ -121,13 +162,21 @@ public class PostService {
         return postRepository.save(post);
     }
 
-    public Post deleteComment(String postId, String commentId) {
+    /**
+     * Delete a comment (only by the author).
+     */
+    public Post deleteComment(String postId, String commentId, String userId) {
         Post post = postRepository.findById(postId).orElseThrow();
-        post.getComments().removeIf(comment -> comment.getId().equals(commentId));
+        post.getComments().removeIf(c ->
+            c.getId().equals(commentId) && c.getUserId().equals(userId)
+        );
         post.setUpdatedAt(new Date());
         return postRepository.save(post);
     }
 
+    /**
+     * Add a reply, notify the comment owner if replier != comment owner.
+     */
     public Post addReply(String postId, String commentId, Reply reply) {
         Post post = postRepository.findById(postId).orElseThrow();
         for (Comment comment : post.getComments()) {
@@ -140,40 +189,34 @@ public class PostService {
             }
         }
         post.setUpdatedAt(new Date());
-        return postRepository.save(post);
-    }
+        Post saved = postRepository.save(post);
 
-    public Post replaceComments(String postId, List<Comment> comments) {
-        Post post = postRepository.findById(postId).orElseThrow();
-        post.setComments(comments);
-        post.setUpdatedAt(new Date());
-        return postRepository.save(post);
-    }
+        // find the comment to notify its owner
+        Optional<Comment> opt = saved.getComments()
+            .stream()
+            .filter(c -> c.getId().equals(commentId))
+            .findFirst();
 
-    public Post editComment(String postId, String commentId, String newText, String userId) {
-        Post post = postRepository.findById(postId).orElseThrow();
-        for (Comment comment : post.getComments()) {
-            if (comment.getId().equals(commentId)) {
-                if (!comment.getUserId().equals(userId)) {
-                    throw new SecurityException("Unauthorized to edit this comment.");
-                }
-                comment.setText(newText);
-                comment.setUpdatedAt(new Date());
-                break;
+        if (opt.isPresent()) {
+            Comment parent = opt.get();
+            if (!reply.getUserId().equals(parent.getUserId())) {
+                Notification n = new Notification();
+                n.setRecipientUsername(parent.getUserId());
+                n.setActorUsername(reply.getUserId());
+                n.setType("REPLY");
+                n.setPostId(postId);
+                n.setCommentId(commentId);
+                n.setReplyId(reply.getId());
+                notificationRepository.save(n);
             }
         }
-        post.setUpdatedAt(new Date());
-        return postRepository.save(post);
+
+        return saved;
     }
 
-    public Post deleteComment(String postId, String commentId, String userId) {
-        Post post = postRepository.findById(postId).orElseThrow();
-        post.getComments().removeIf(comment ->
-            comment.getId().equals(commentId) && comment.getUserId().equals(userId)
-        );
-        post.setUpdatedAt(new Date());
-        return postRepository.save(post);
-    }
+    /**
+     * Edit a reply (only by its author).
+     */
     public Post editReply(String postId, String commentId, String replyId, String newText, String userId) {
         Post post = postRepository.findById(postId).orElseThrow();
         for (Comment comment : post.getComments()) {
@@ -186,28 +229,39 @@ public class PostService {
                 }
             }
         }
+        post.setUpdatedAt(new Date());
         return postRepository.save(post);
     }
-    public Post getPostById(String id) {
-    return postRepository.findById(id).orElseThrow(() -> new RuntimeException("Post not found"));
-}
-    
+
+    /**
+     * Delete a reply (only by its author).
+     */
     public Post deleteReply(String postId, String commentId, String replyId, String userId) {
         Post post = postRepository.findById(postId).orElseThrow();
         for (Comment comment : post.getComments()) {
             if (comment.getId().equals(commentId)) {
-                comment.getReplies().removeIf(reply ->
-                    reply.getId().equals(replyId) && reply.getUserId().equals(userId)
+                comment.getReplies().removeIf(r ->
+                    r.getId().equals(replyId) && r.getUserId().equals(userId)
                 );
             }
         }
+        post.setUpdatedAt(new Date());
         return postRepository.save(post);
     }
-        
+
+    public Post getPostById(String id) {
+        return postRepository.findById(id)
+                             .orElseThrow(() -> new RuntimeException("Post not found"));
+    }
+
     public List<Post> getPostsByUserId(String userId) {
-    return postRepository.findByUserId(userId);
-}
+        return postRepository.findByUserId(userId);
+    }
 
-
-    
+    public Post replaceComments(String postId, List<Comment> comments) {
+        Post post = postRepository.findById(postId).orElseThrow();
+        post.setComments(comments);
+        post.setUpdatedAt(new Date());
+        return postRepository.save(post);
+    }
 }
