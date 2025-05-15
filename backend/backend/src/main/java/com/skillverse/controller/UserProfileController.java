@@ -1,3 +1,4 @@
+// src/main/java/com/skillverse/controller/UserProfileController.java
 package com.skillverse.controller;
 
 import com.skillverse.model.UserProfile;
@@ -22,13 +23,13 @@ public class UserProfileController {
 
     private static final String UPLOAD_DIR = System.getProperty("user.dir") + "/uploads/";
 
-    // GET all user profiles
+    // GET /api/user-profiles
     @GetMapping
     public ResponseEntity<List<UserProfile>> getAllUserProfiles() {
         return ResponseEntity.ok(userProfileService.getAllUserProfiles());
     }
 
-    // GET user profile by ID
+    // GET /api/user-profiles/{id}
     @GetMapping("/{id}")
     public ResponseEntity<UserProfile> getUserProfileById(@PathVariable String id) {
         UserProfile profile = userProfileService.getUserProfileById(id);
@@ -38,22 +39,35 @@ public class UserProfileController {
         return ResponseEntity.ok(profile);
     }
 
-    // GET user profile by username
+    // GET /api/user-profiles/by-username/{username}
     @GetMapping("/by-username/{username}")
     public ResponseEntity<UserProfile> getByUsername(@PathVariable String username) {
         UserProfile profile = userProfileService.getByUsername(username);
-        if (profile == null) return ResponseEntity.notFound().build();
+        if (profile == null) {
+            return ResponseEntity.notFound().build();
+        }
         return ResponseEntity.ok(profile);
     }
 
-    // CREATE user profile
+    // NEW: GET /api/user-profiles/search?q=foo
+    @GetMapping("/search")
+    public ResponseEntity<List<UserProfile>> searchUsers(@RequestParam("q") String query) {
+        // optional: require at least 2 chars
+        if (query == null || query.trim().length() < 1) {
+            return ResponseEntity.ok(List.of());
+        }
+        List<UserProfile> matches = userProfileService.searchByUsername(query.trim());
+        return ResponseEntity.ok(matches);
+    }
+
+    // POST /api/user-profiles/create
     @PostMapping("/create")
     public ResponseEntity<UserProfile> createUserProfile(@RequestBody UserProfile userProfile) {
         UserProfile created = userProfileService.createUserProfile(userProfile);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
-    // UPDATE user profile
+    // PUT /api/user-profiles/update/{id}
     @PutMapping("/update/{id}")
     public ResponseEntity<UserProfile> updateUserProfile(
             @PathVariable String id,
@@ -66,7 +80,7 @@ public class UserProfileController {
         return ResponseEntity.ok(updated);
     }
 
-    // DELETE user profile
+    // DELETE /api/user-profiles/delete/{id}
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<Void> deleteUserProfile(@PathVariable String id) {
         boolean deleted = userProfileService.deleteUserProfile(id);
@@ -76,7 +90,7 @@ public class UserProfileController {
         return ResponseEntity.noContent().build();
     }
 
-    // UPLOAD profile picture
+    // POST /api/user-profiles/upload/{id}
     @PostMapping("/upload/{id}")
     public ResponseEntity<String> uploadProfilePicture(
             @PathVariable String id,
@@ -87,29 +101,25 @@ public class UserProfileController {
         }
 
         try {
-            // Ensure upload directory exists
             File dir = new File(UPLOAD_DIR);
             if (!dir.exists()) dir.mkdirs();
 
-            // Save with unique name
             String filename = UUID.randomUUID() + "_" + file.getOriginalFilename();
             String filePath = UPLOAD_DIR + filename;
             file.transferTo(new File(filePath));
 
-            // Update profile picture path
             String relativePath = "/uploads/" + filename;
             userProfileService.updateProfilePicture(id, relativePath);
 
             return ResponseEntity.ok("File uploaded successfully");
-
         } catch (IOException e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Could not upload file");
+                                 .body("Could not upload file");
         }
     }
 
-    // FOLLOW another user
+    // PUT /api/user-profiles/{userId}/follow/{targetId}
     @PutMapping("/{userId}/follow/{targetId}")
     public ResponseEntity<UserProfile> follow(
             @PathVariable String userId,
@@ -117,7 +127,7 @@ public class UserProfileController {
         return ResponseEntity.ok(userProfileService.follow(userId, targetId));
     }
 
-    // UNFOLLOW another user
+    // PUT /api/user-profiles/{userId}/unfollow/{targetId}
     @PutMapping("/{userId}/unfollow/{targetId}")
     public ResponseEntity<UserProfile> unfollow(
             @PathVariable String userId,
