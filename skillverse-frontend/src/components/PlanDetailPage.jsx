@@ -7,8 +7,12 @@ export default function PlanDetailPage() {
   const navigate = useNavigate();
   const [plan, setPlan] = useState(null);
   const [milestones, setMilestones] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
+    const user = JSON.parse(sessionStorage.getItem('userProfile'));
+    setCurrentUser(user);
+
     getPlanById(id)
       .then(res => {
         setPlan(res.data);
@@ -17,7 +21,11 @@ export default function PlanDetailPage() {
       .catch(console.error);
   }, [id]);
 
+  const isOwner = plan?.createdBy === currentUser?.username;
+
   const toggleMilestone = index => {
+    if (!isOwner) return;
+
     const updatedMilestones = milestones.map((ms, i) =>
       i === index ? { ...ms, completed: !ms.completed } : ms
     );
@@ -37,7 +45,7 @@ export default function PlanDetailPage() {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">{plan.title}</h1>
 
-      {/* Topics as a bulleted list */}
+      {/* Topics */}
       <div>
         <strong>Topics:</strong>
         <ul className="list-disc pl-5 mt-1">
@@ -51,7 +59,7 @@ export default function PlanDetailPage() {
       {/* Resources */}
       <div>
         <strong>Resources:</strong>
-        {plan.resources && plan.resources.length > 0 ? (
+        {plan.resources?.length > 0 ? (
           <ul className="list-disc pl-5 mt-1">
             {plan.resources.map((res, i) => (
               <li key={i}>
@@ -81,41 +89,53 @@ export default function PlanDetailPage() {
         />
       </div>
 
-      {/* Milestones with toggle */}
+      {/* Milestones */}
       <h2 className="mt-6 font-semibold">Milestones</h2>
       <ul className="list-disc pl-5 mt-1">
         {milestones.map((ms, i) => (
           <li key={i} className="flex items-center">
-            <input
-              type="checkbox"
-              checked={ms.completed}
-              onChange={() => toggleMilestone(i)}
-              className="mr-2"
-            />
+            {isOwner && (
+              <input
+                type="checkbox"
+                checked={ms.completed}
+                onChange={() => toggleMilestone(i)}
+                className="mr-2"
+              />
+            )}
+            {!isOwner && (
+              <input
+                type="checkbox"
+                checked={ms.completed}
+                disabled
+                className="mr-2"
+              />
+            )}
             {ms.name} (due {ms.dueDate})
           </li>
         ))}
       </ul>
 
-      {/* Actions */}
-      <div className="space-x-2 mt-4">
-        <Link
-          to={`/plans/${id}/edit`}
-          className="px-4 py-2 bg-yellow-500 text-white rounded"
-        >
-          Edit
-        </Link>
-        <button
-          onClick={() => {
-            if (window.confirm('Delete this plan?')) {
-              deletePlan(id).then(() => navigate('/plans'));
-            }
-          }}
-          className="px-4 py-2 bg-red-600 text-white rounded"
-        >
-          Delete
-        </button>
-      </div>
+      {/* Edit/Delete - Only if owner */}
+      {isOwner && (
+        <div className="space-x-2 mt-4">
+          <Link
+            to={`/plans/${id}/edit`}
+            className="px-4 py-2 bg-yellow-500 text-white rounded"
+          >
+            Edit
+          </Link>
+          <button
+            onClick={() => {
+              if (window.confirm('Delete this plan?')) {
+                deletePlan(id).then(() => navigate('/plans'));
+              }
+            }}
+            className="px-4 py-2 bg-red-600 text-white rounded"
+          >
+            Delete
+          </button>
+        </div>
+      )}
     </div>
   );
 }
