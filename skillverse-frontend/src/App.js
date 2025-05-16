@@ -28,6 +28,14 @@ import AdminPlans from './admin/AdminPlans';
 import AdminUsers from './admin/AdminUsers';
 import './index.css'; // Tailwind CSS styles
 
+// src/App.jsx
+import EditPostForm from './components/EditPostForm';
+
+
+
+
+
+
 
 import './App.css';
 
@@ -41,6 +49,7 @@ function App() {
             {/* Home & Posts */}
             <Route path="/" element={<HomePage />} />
             <Route path="/create" element={<CreatePostForm />} />
+<Route path="/posts/:id/edit" element={<EditPostForm />} />
 
             {/* Learning Plans CRUD */}
             <Route path="/plans" element={<LearningPlanList />} />

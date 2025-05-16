@@ -1,25 +1,30 @@
-import React, { useEffect, useState, useCallback } from 'react';
+// src/components/HomePage.jsx
+import React, { useState, useEffect, useCallback } from 'react';
 import PostCard from './PostCard';
 import { motion } from 'framer-motion';
 
-function HomePage() {
+export default function HomePage() {
   const [posts, setPosts] = useState([]);
 
   const fetchPosts = useCallback(() => {
     fetch('http://localhost:8081/api/posts', {
       credentials: 'include',
     })
-      .then((res) => res.json())
-      .then((data) => {
+      .then(res => res.json())
+      .then(data => {
         if (Array.isArray(data)) {
-          setPosts(data);
+          // sort newest first
+          const sorted = data.slice().sort((a, b) => 
+            new Date(b.createdAt) - new Date(a.createdAt)
+          );
+          setPosts(sorted);
         } else {
-          console.error("Unexpected response:", data);
+          console.error('Unexpected response:', data);
           setPosts([]);
         }
       })
-      .catch((err) => {
-        console.error("Fetch error:", err);
+      .catch(err => {
+        console.error('Fetch error:', err);
         setPosts([]);
       });
   }, []);
@@ -56,7 +61,7 @@ function HomePage() {
           },
         }}
       >
-        {posts.map((post) => (
+        {posts.map(post => (
           <motion.div
             key={post.id}
             variants={{
@@ -72,5 +77,3 @@ function HomePage() {
     </motion.div>
   );
 }
-
-export default HomePage;
