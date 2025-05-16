@@ -1,145 +1,210 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+// src/components/PostForm.jsx
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import axios from 'axios';
 
-const CreatePostForm = ({ onPostCreated }) => {
+export default function PostForm() {
+  const { id } = useParams();
+  const editMode = Boolean(id);
   const navigate = useNavigate();
+  const BASE = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8081';
 
+  const [user, setUser] = useState(null);
   const [form, setForm] = useState({
-    userId: "",
-    skillName: "",
-    description: "",
+    userId: '',
+    skillName: '',
+    description: '',
   });
-
   const [mediaFiles, setMediaFiles] = useState([]);
   const [uploadProgress, setUploadProgress] = useState(null);
-  const [successMessage, setSuccessMessage] = useState("");
-  const [user, setUser] = useState(null);
+  const [message, setMessage] = useState('');
 
-  // ✅ Check for user and redirect if not logged in
+  // 1) ensure logged in
   useEffect(() => {
-    const storedUser = JSON.parse(sessionStorage.getItem('userProfile'));
-    if (storedUser?.username) {
-      setUser(storedUser);
-      setForm(f => ({ ...f, userId: storedUser.username }));
-    } else {
+    const stored = sessionStorage.getItem('userProfile');
+    if (!stored) {
       navigate('/login');
+      return;
     }
+    const me = JSON.parse(stored);
+    setUser(me);
+    setForm(f => ({ ...f, userId: me.username }));
   }, [navigate]);
 
-  const handleSubmit = async (e) => {
+  // 2) if editing, load existing post
+  useEffect(() => {
+    if (!editMode) return;
+    axios
+      .get(`${BASE}/api/posts/${id}`)
+      .then(res => {
+        const p = res.data;
+        setForm({
+          userId: p.userId,
+          skillName: p.skillName,
+          description: p.description,
+        });
+      })
+      .catch(() => {
+        alert('Failed to load post for editing.');
+        navigate('/');
+      });
+  }, [editMode, id, navigate, BASE]);
+
+  // 3) handle field changes
+  const handleChange = e =>
+    setForm(f => ({ ...f, [e.target.name]: e.target.value }));
+
+  // 4) submit
+  const handleSubmit = async e => {
     e.preventDefault();
+    setMessage('');
 
-    const formData = new FormData();
-    formData.append(
-      "post",
-      new Blob([JSON.stringify(form)], { type: "application/json" })
-    );
-    mediaFiles.slice(0, 3).forEach(file => {
-      formData.append("files", file);
-    });
-
-    const token = sessionStorage.getItem('authToken');
-
-    const xhr = new XMLHttpRequest();
-    xhr.open("POST", "http://localhost:8081/api/posts", true);
-    xhr.setRequestHeader("Authorization", `Bearer ${token}`);
-
-    xhr.upload.onprogress = (e) => {
-      if (e.lengthComputable) {
-        const percent = Math.round((e.loaded / e.total) * 100);
-        setUploadProgress(percent);
+    if (editMode) {
+      // JSON-only PUT
+      try {
+        await axios.put(
+          `${BASE}/api/posts/${id}`,
+          {
+            skillName: form.skillName,
+            description: form.description,
+            // existing mediaUrls left untouched server-side
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${sessionStorage.getItem('authToken')}`,
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+        // always redirect to home
+        navigate('/');
+      } catch (err) {
+        console.error(err);
+        setMessage('Failed to update post.');
       }
-    };
+    } else {
+      // POST multipart
+      const fd = new FormData();
+      fd.append(
+        'post',
+        new Blob([JSON.stringify(form)], {
+          type: 'application/json',
+        })
+      );
+      mediaFiles.slice(0, 3).forEach(f => fd.append('files', f));
 
-    xhr.onload = () => {
-      if (xhr.status === 200) {
-        const data = JSON.parse(xhr.responseText);
-        onPostCreated?.(data);
-        setForm(f => ({
-          userId: f.userId,
-          skillName: "",
-          description: "",
-        }));
-        setMediaFiles([]);
-        setUploadProgress(null);
-        setSuccessMessage("Post added successfully!");
-        setTimeout(() => navigate("/"), 2000);
-      } else {
-        console.error("Upload failed:", xhr.statusText);
-        setUploadProgress(null);
-      }
-    };
-
-    xhr.onerror = () => {
-      console.error("Upload error");
-      setUploadProgress(null);
-    };
-
-    xhr.send(formData);
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', `${BASE}/api/posts`, true);
+      xhr.setRequestHeader(
+        'Authorization',
+        `Bearer ${sessionStorage.getItem('authToken')}`
+      );
+      xhr.upload.onprogress = ev => {
+        if (ev.lengthComputable) {
+          setUploadProgress(Math.round((ev.loaded / ev.total) * 100));
+        }
+      };
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          // created successfully → always go home
+          navigate('/');
+        } else {
+          console.error(xhr.statusText);
+          setMessage('Upload failed.');
+        }
+      };
+      xhr.onerror = () => setMessage('Upload error.');
+      xhr.send(fd);
+    }
   };
 
-  // ✅ Don't render form until user is confirmed
   if (!user) return null;
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-4 shadow mb-6 rounded">
-      <h2 className="text-lg font-semibold mb-2">Share a Skill</h2>
+    <form
+      onSubmit={handleSubmit}
+      className="max-w-lg mx-auto bg-white p-6 rounded shadow"
+    >
+      <h2 className="text-2xl font-bold mb-4">
+        {editMode ? 'Edit Post' : 'Create New Post'}
+      </h2>
 
-      {successMessage && (
-        <div className="text-green-600 font-medium mb-4">{successMessage}</div>
-      )}
+      {message && <div className="mb-4 text-red-600">{message}</div>}
 
-      <input
-        type="text"
-        placeholder="Username"
-        className="w-full border p-2 mb-2 rounded bg-gray-100"
-        value={form.userId}
-        disabled
-      />
+      {/* userId (read only) */}
+      <div className="mb-4">
+        <label className="block font-medium">Username</label>
+        <input
+          type="text"
+          name="userId"
+          value={form.userId}
+          disabled
+          className="w-full border px-3 py-2 rounded bg-gray-100"
+        />
+      </div>
 
-      <input
-        type="text"
-        placeholder="Skill Name"
-        className="w-full border p-2 mb-2 rounded"
-        value={form.skillName}
-        onChange={e => setForm({ ...form, skillName: e.target.value })}
-        required
-      />
+      {/* skillName */}
+      <div className="mb-4">
+        <label className="block font-medium">Skill Name</label>
+        <input
+          type="text"
+          name="skillName"
+          value={form.skillName}
+          onChange={handleChange}
+          required
+          className="w-full border px-3 py-2 rounded"
+        />
+      </div>
 
-      <textarea
-        placeholder="Description"
-        className="w-full border p-2 mb-2 rounded"
-        value={form.description}
-        onChange={e => setForm({ ...form, description: e.target.value })}
-        required
-      />
+      {/* description */}
+      <div className="mb-4">
+        <label className="block font-medium">Description</label>
+        <textarea
+          name="description"
+          value={form.description}
+          onChange={handleChange}
+          required
+          className="w-full border px-3 py-2 rounded"
+        />
+      </div>
 
-      <input
-        type="file"
-        multiple
-        accept="image/*,video/*"
-        className="w-full border p-2 mb-4 rounded"
-        onChange={e => setMediaFiles(Array.from(e.target.files))}
-      />
-      <p className="text-xs text-gray-500 mb-2">
-        You may upload up to 3 media files.
-      </p>
-
-      {uploadProgress !== null && (
-        <div className="w-full bg-gray-200 rounded-full h-2.5 mb-4">
-          <div
-            className="bg-green-500 h-2.5 rounded-full transition-all"
-            style={{ width: `${uploadProgress}%` }}
-          ></div>
-          <p className="text-sm text-gray-600 mt-1">{uploadProgress}% uploaded</p>
+      {/* only on create: file input */}
+      {!editMode && (
+        <div className="mb-4">
+          <label className="block font-medium">
+            Upload up to 3 images/videos
+          </label>
+          <input
+            type="file"
+            multiple
+            accept="image/*,video/*"
+            onChange={e => setMediaFiles(Array.from(e.target.files))}
+            className="mt-2"
+          />
         </div>
       )}
 
-      <button className="bg-green-600 text-white px-4 py-2 rounded">
-        Post
+      {/* upload progress */}
+      {!editMode && uploadProgress != null && (
+        <div className="mb-4">
+          <div className="w-full h-2 bg-gray-200 rounded">
+            <div
+              className="h-2 bg-green-500 rounded"
+              style={{ width: `${uploadProgress}%` }}
+            />
+          </div>
+          <p className="text-sm text-gray-600">{uploadProgress}% uploaded</p>
+        </div>
+      )}
+
+      <button
+        type="submit"
+        className={`w-full py-2 rounded text-white ${
+          editMode ? 'bg-blue-600' : 'bg-green-600'
+        } hover:opacity-90`}
+      >
+        {editMode ? 'Update Post' : 'Publish Post'}
       </button>
     </form>
   );
-};
-
-export default CreatePostForm;
+}
