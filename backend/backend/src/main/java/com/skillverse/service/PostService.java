@@ -1,3 +1,5 @@
+// src/main/java/com/skillverse/service/PostService.java
+
 package com.skillverse.service;
 
 import com.skillverse.model.Comment;
@@ -23,7 +25,7 @@ public class PostService {
     @Autowired
     private NotificationRepository notificationRepository;
 
-    // Save uploaded files and return created post
+    // ✅ Save uploaded files and return created post
     public Post createPostWithFiles(Post post, MultipartFile[] files) {
         List<String> mediaUrls = new ArrayList<>();
 
@@ -42,7 +44,7 @@ public class PostService {
                         file.transferTo(dest);
                         mediaUrls.add("/uploads/" + fileName);
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        throw new RuntimeException("Failed to store file", e);
                     }
                 }
             }
@@ -51,17 +53,17 @@ public class PostService {
         post.setMediaUrls(mediaUrls);
         post.setCreatedAt(new Date());
         post.setUpdatedAt(new Date());
-        if (post.getLikes() == null)  post.setLikes(new ArrayList<>());
+        if (post.getLikes() == null)    post.setLikes(new ArrayList<>());
         if (post.getComments() == null) post.setComments(new ArrayList<>());
 
         return postRepository.save(post);
     }
 
-    // Create post using JSON (no media files)
+    // ✅ Create post using JSON (no media files)
     public Post createPost(Post post) {
         post.setCreatedAt(new Date());
         post.setUpdatedAt(new Date());
-        if (post.getLikes() == null)  post.setLikes(new ArrayList<>());
+        if (post.getLikes() == null)    post.setLikes(new ArrayList<>());
         if (post.getComments() == null) post.setComments(new ArrayList<>());
         return postRepository.save(post);
     }
@@ -70,6 +72,7 @@ public class PostService {
         return postRepository.findAll();
     }
 
+    // ✅ JSON‐only update
     public Optional<Post> updatePost(String id, Post updatedPost) {
         return postRepository.findById(id).map(existingPost -> {
             existingPost.setDescription(updatedPost.getDescription());
@@ -78,6 +81,47 @@ public class PostService {
             existingPost.setUpdatedAt(new Date());
             return postRepository.save(existingPost);
         });
+    }
+
+    /**
+     * ✅ Full multipart update, preserving client-kept URLs and uploading new files.
+     */
+    public Post updateWithFiles(
+        String postId,
+        Post updatedPost,
+        MultipartFile[] newFiles
+    ) throws IOException {
+        Post existing = postRepository.findById(postId)
+            .orElseThrow(() -> new RuntimeException("Post not found"));
+
+        // — Text fields
+        existing.setSkillName(updatedPost.getSkillName());
+        existing.setDescription(updatedPost.getDescription());
+        existing.setUpdatedAt(new Date());
+
+        // — Keep only the URLs client passed along
+        List<String> kept = updatedPost.getMediaUrls() != null
+            ? updatedPost.getMediaUrls()
+            : List.of();
+        existing.setMediaUrls(new ArrayList<>(kept));
+
+        // — Save new uploads
+        String uploadDir = System.getProperty("user.dir") + "/uploads";
+        File dir = new File(uploadDir);
+        if (!dir.exists()) dir.mkdirs();
+
+        if (newFiles != null) {
+            for (MultipartFile f : newFiles) {
+                if (!f.isEmpty()) {
+                    String filename = UUID.randomUUID() + "_" + f.getOriginalFilename();
+                    File dest = new File(dir, filename);
+                    f.transferTo(dest);
+                    existing.getMediaUrls().add("/uploads/" + filename);
+                }
+            }
+        }
+
+        return postRepository.save(existing);
     }
 
     public boolean deletePost(String id) {
@@ -146,13 +190,13 @@ public class PostService {
     }
 
     /**
-     * Edit a comment (authorization elsewhere).
+     * Edit a comment (only by its author).
      */
     public Post editComment(String postId, String commentId, String newText, String userId) {
         Post post = postRepository.findById(postId).orElseThrow();
         for (Comment comment : post.getComments()) {
-            if (comment.getId().equals(commentId)
-             && comment.getUserId().equals(userId)) {
+            if (comment.getId().equals(commentId) &&
+                comment.getUserId().equals(userId)) {
                 comment.setText(newText);
                 comment.setUpdatedAt(new Date());
                 break;
@@ -191,24 +235,20 @@ public class PostService {
         post.setUpdatedAt(new Date());
         Post saved = postRepository.save(post);
 
-        // find the comment to notify its owner
-        Optional<Comment> opt = saved.getComments()
-            .stream()
+        // notify comment owner
+        Optional<Comment> parent = saved.getComments().stream()
             .filter(c -> c.getId().equals(commentId))
             .findFirst();
-
-        if (opt.isPresent()) {
-            Comment parent = opt.get();
-            if (!reply.getUserId().equals(parent.getUserId())) {
-                Notification n = new Notification();
-                n.setRecipientUsername(parent.getUserId());
-                n.setActorUsername(reply.getUserId());
-                n.setType("REPLY");
-                n.setPostId(postId);
-                n.setCommentId(commentId);
-                n.setReplyId(reply.getId());
-                notificationRepository.save(n);
-            }
+        if (parent.isPresent() &&
+            !reply.getUserId().equals(parent.get().getUserId())) {
+            Notification n = new Notification();
+            n.setRecipientUsername(parent.get().getUserId());
+            n.setActorUsername(reply.getUserId());
+            n.setType("REPLY");
+            n.setPostId(postId);
+            n.setCommentId(commentId);
+            n.setReplyId(reply.getId());
+            notificationRepository.save(n);
         }
 
         return saved;
@@ -222,7 +262,8 @@ public class PostService {
         for (Comment comment : post.getComments()) {
             if (comment.getId().equals(commentId)) {
                 for (Reply reply : comment.getReplies()) {
-                    if (reply.getId().equals(replyId) && reply.getUserId().equals(userId)) {
+                    if (reply.getId().equals(replyId) &&
+                        reply.getUserId().equals(userId)) {
                         reply.setText(newText);
                         reply.setUpdatedAt(new Date());
                     }
@@ -251,13 +292,16 @@ public class PostService {
 
     public Post getPostById(String id) {
         return postRepository.findById(id)
-                             .orElseThrow(() -> new RuntimeException("Post not found"));
+            .orElseThrow(() -> new RuntimeException("Post not found"));
     }
 
     public List<Post> getPostsByUserId(String userId) {
         return postRepository.findByUserId(userId);
     }
 
+    /**
+     * Optional: replace full comment list (used for syncing).
+     */
     public Post replaceComments(String postId, List<Comment> comments) {
         Post post = postRepository.findById(postId).orElseThrow();
         post.setComments(comments);
