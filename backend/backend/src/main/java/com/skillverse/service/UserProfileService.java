@@ -105,4 +105,8 @@ public class UserProfileService {
     public UserProfile save(UserProfile profile) {
         return userProfileRepository.save(profile);
     }
+
+    public List<UserProfile> searchByUsername(String q) {
+        return userProfileRepository.findByUsernameContainingIgnoreCase(q);
+    }
 }
